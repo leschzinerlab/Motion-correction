@@ -1,3 +1,15 @@
+===Motion correction README
+
+Scripts for using 'motioncorr' alignment procedure for direct electron
+detector movies.
+
+===README.txt from Li et al. Nat. Methods (2013):
+
+"Electron counting and beam-induced motion correction enable
+near-atomic-resolution single-particle cryo-EM."
+Xueming Li, Paul Moone, Shawn Zheng, Christopher R Booth, Michael B Braunfeld,	 
+Sander Gubbens,	David A Agard & Yifan Cheng
+
 Motion Correction for Dose-Fractionation Stack
 Version 1.0, April 11, 2013
 
