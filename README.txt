@@ -1,4 +1,5 @@
-=== Motion correction README
+Motion correction README
+===================
 
 Scripts for using 'motioncorr' alignment procedure for direct electron
 detector movies.
