@@ -4,6 +4,11 @@ Motion correction README
 Scripts for using 'motioncorr' alignment procedure for direct electron
 detector movies.
 
+CUDA-5.0 libraries must be in your path before you can execute this program:
+
+   PATH: /usr/local/cuda-5.0/bin
+   LD_LIBRARY_PATH: /usr/local/cuda-5.0/lib64
+
 === README.txt from Li et al. Nat. Methods (2013):
 
 "Electron counting and beam-induced motion correction enable
