@@ -1,9 +1,9 @@
-===Motion correction README
+=== Motion correction README
 
 Scripts for using 'motioncorr' alignment procedure for direct electron
 detector movies.
 
-===README.txt from Li et al. Nat. Methods (2013):
+=== README.txt from Li et al. Nat. Methods (2013):
 
 "Electron counting and beam-induced motion correction enable
 near-atomic-resolution single-particle cryo-EM."
