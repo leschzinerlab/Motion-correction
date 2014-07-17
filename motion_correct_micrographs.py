@@ -1,10 +1,6 @@
 #!/usr/bin/env python 
 
-#This script will convert an imagic or spider stack into the appropriate file format for XMIPP/Relion,
-#which is single particle images in a new folder
-#
-#TEM|pro - mcianfrocco
-
+import shutil
 import optparse
 from sys import *
 import os,sys,re
@@ -19,21 +15,19 @@ import time
 #=========================
 def setupParserOptions():
         parser = optparse.OptionParser()
-        parser.set_usage("%prog -i <stack.img> -o <output folder name> --num=[number of particles in stack]")
-        parser.add_option("-i",dest="stack",type="string",metavar="FILE",
-                help="Particle stack in .img or .spi format")
-        parser.add_option("-o",dest="folder",type="string",metavar="FILE",
-                help="Output folder name for single particles")
-        parser.add_option("--num",dest="numParts",type="int", metavar="INT",
-                help="Number of particles in stack")
-        parser.add_option("-d", action="store_true",dest="debug",default=False,
+        parser.set_usage("%prog --dir=<folder with micrographs>")
+        parser.add_option("--dir",dest="dir",type="string",metavar="FILE",
+                help="Directory containing direct detector movies with .mrcs extension")
+        parser.add_option("--save", action="store_true",dest="save",default=False,
+                help="Saved aligned, binned image for easy viewing")
+	parser.add_option("-d", action="store_true",dest="debug",default=False,
                 help="debug")
         options,args = parser.parse_args()
 
         if len(args) > 0:
                 parser.error("Unknown commandline options: " +str(args))
 
-        if len(sys.argv) < 3:
+        if len(sys.argv) < 2:
                 parser.print_help()
                 sys.exit()
         params={}
@@ -44,23 +38,62 @@ def setupParserOptions():
 
 #=============================
 def checkConflicts(params):
-        if not params['stack']:
-                print "\nWarning: no stack specified\n"
-        elif not os.path.exists(params['stack']):
-                print "\nError: stack file '%s' does not exist\n" % params['stack']
-                sys.exit()
-        if params['stack'][-4:] != '.img':
-                if params['stack'][-4:] != '.spi':
-                        if params['stack'][-4:] != '.hed':
-                                print 'Stack extension %s is not recognized as .spi, .hed or .img file' %(params['stack'][-4:])
-                                sys.exit()
 
-        if os.path.exists(params['folder']):
-                print "\nError: output folder already exists, exiting.\n"
+        if not os.path.exists(params['dir']):
+                print "\nError: directory %s doesn't exists, exiting.\n" %(params['dir'])
                 sys.exit()
 
+	#Check if CUDA is loaded
+	cudapath = subprocess.Popen("env | grep cuda", shell=True, stdout=subprocess.PIPE).stdout.read().strip()	
+	if not cudapath:
+		print "\nError: CUDA libraries are not loaded. Load CUDA and try again.\n"
+		sys.exit()
+#==============================
+def alignDDmovies(params,motionCorrPath):
+
+	mrcsList = sorted(glob.glob('%s/*.mrcs'%(params['dir'])))
+	currentPath = os.getcwd()
+
+	for mrcs in mrcsList:
+		
+		if params['debug'] is True:
+			print mrcs
+
+		print 'Motion correcting movie %s --> %s.mrc' %(mrcs,mrcs[:-5])
+
+		cmd = '%s %s -fcs %s.mrc' %(motionCorrPath,mrcs,mrcs[:-5]) 
+		subprocess.Popen(cmd,shell=True).wait()
+	
+		mrcsOnly = mrcs.split('/')
+
+		if params['save'] is True:
+			print 'Saving binned image'
+			shutil.move('%s/dosef_quick/%s_CorrSum.mrc'%(currentPath,mrcsOnly[-1][:-5]),'%s_CorrSum.mrc'%(mrcs[:-5]))
+	
+		#Clean up	
+		os.remove('%s_Log.txt' %(mrcs[:-5]))
+		shutil.rmtree('dosef_quick')	
+		
+#=============================
+def getMotionCorrPath(params):
+
+	#first try same directory as this script
+	currentPath = sys.argv[0]
+	currentPath = currentPath[:-30]
+
+	if os.path.exists('%s/motioncorr' %(currentPath)):
+		return '%s/motioncorr' %(currentPath)
+
+	if os.path.exists('motioncorr'):
+		return 'motioncorr'
+
+	if os.pathexists('/usr/local/bin/motioncorr'):
+		return '/usr/local/bin/motioncorr'
+		
 #==============================
 if __name__ == "__main__":
 
         params=setupParserOptions()
         checkConflicts(params)
+	motionCorrPath=getMotionCorrPath(params)
+	alignDDmovies(params,motionCorrPath)
