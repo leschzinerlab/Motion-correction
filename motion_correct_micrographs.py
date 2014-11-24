@@ -59,6 +59,9 @@ def alignDDmovies(params,motionCorrPath):
 		if params['debug'] is True:
 			print mrcs
 
+		if os.path.exists('%s.mrc'%(mrcs[:-5])):
+			continue
+
 		print 'Motion correcting movie %s --> %s.mrc' %(mrcs,mrcs[:-5])
 
 		cmd = '%s %s -fcs %s.mrc' %(motionCorrPath,mrcs,mrcs[:-5]) 
