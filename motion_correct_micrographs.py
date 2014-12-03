@@ -15,9 +15,11 @@ import time
 #=========================
 def setupParserOptions():
         parser = optparse.OptionParser()
-        parser.set_usage("%prog --dir=<folder with micrographs>")
+        parser.set_usage("%prog --dir=<folder with micrographs> --bin=<binning>")
         parser.add_option("--dir",dest="dir",type="string",metavar="FILE",
                 help="Directory containing direct detector movies with .mrcs extension")
+	parser.add_option("--bin",dest="bin",type="int",metavar="INTEGER",default=1,
+                help="Binning before movie alignment (Default = 1)")
         parser.add_option("--save", action="store_true",dest="save",default=False,
                 help="Saved aligned, binned image for easy viewing")
 	parser.add_option("-d", action="store_true",dest="debug",default=False,
@@ -59,12 +61,17 @@ def alignDDmovies(params,motionCorrPath):
 		if params['debug'] is True:
 			print mrcs
 
-		if os.path.exists('%s.mrc'%(mrcs[:-5])):
+		if os.path.exists('%s.mrc' %(mrcs[:-5])):
+			print "\n"
+			print 'Micrograph %s.mrc already exists, skipping %s' %(mrcs[:-5],mrcs)
+			print "\n"
 			continue
 
 		print 'Motion correcting movie %s --> %s.mrc' %(mrcs,mrcs[:-5])
 
-		cmd = '%s %s -fcs %s.mrc' %(motionCorrPath,mrcs,mrcs[:-5]) 
+		cmd = '%s %s -fcs %s.mrc -bin %s' %(motionCorrPath,mrcs,mrcs[:-5],str(params['bin']))
+		if params['debug'] is True:
+			print cmd 
 		subprocess.Popen(cmd,shell=True).wait()
 	
 		mrcsOnly = mrcs.split('/')
@@ -74,7 +81,10 @@ def alignDDmovies(params,motionCorrPath):
 			shutil.move('%s/dosef_quick/%s_CorrSum.mrc'%(currentPath,mrcsOnly[-1][:-5]),'%s_CorrSum.mrc'%(mrcs[:-5]))
 	
 		#Clean up	
-		os.remove('%s_Log.txt' %(mrcs[:-5]))
+		if params['bin'] == 1:
+			os.remove('%s_Log.txt' %(mrcs[:-5]))
+		if params['bin'] > 1:
+			os.remove('%s_%ix_Log.txt' %(mrcs[:-5],params['bin']))
 		shutil.rmtree('dosef_quick')	
 		
 #=============================
