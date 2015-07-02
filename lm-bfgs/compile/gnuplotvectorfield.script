@@ -1,0 +1,14 @@
+#set term postscript
+#set output 'test.ps'
+#set autoscale
+# point
+set xrange [1:3838]
+set yrange [1:3710]
+set palette defined (0 "black", 1 "red", 2 "orange", \
+3 "green", 4 "blue")
+file1 = '071213-0208.vec'
+pointsize = 0.5
+#plot file1 u 2:3:1 w l lc palette pt 6 ps pointsize
+plot file1 u 2:3:1 w l lc palette
+pause -1
+#set term x11

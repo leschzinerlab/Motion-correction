@@ -78,7 +78,9 @@ def alignDDmovies(params,motionCorrPath):
 
 		if params['save'] is True:
 			print 'Saving binned image'
-			shutil.move('%s/dosef_quick/%s_CorrSum.mrc'%(currentPath,mrcsOnly[-1][:-5]),'%s_CorrSum.mrc'%(mrcs[:-5]))
+			if params['debug'] is True:
+				print 'Moving %s/dosef_quick/%s_CorrSum.mrc --> %s_CorrSum.mrc'%(params['dir'],mrcsOnly[-1][:-5],mrcs[:-5])
+			shutil.move('%s/dosef_quick/%s_CorrSum.mrc'%(params['dir'],mrcsOnly[-1][:-5]),'%s_CorrSum.mrc'%(mrcs[:-5]))
 	
 		#Clean up	
 		if params['bin'] == 1:
