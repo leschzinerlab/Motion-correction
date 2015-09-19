@@ -105,7 +105,7 @@ def getMotionCorrPath(params):
 	if os.path.exists('/usr/local/bin/motioncorr'):
 		return '/usr/local/bin/motioncorr'
 	
-	if os.path.exits('/home/EM_Packages/motioncorr_v2.1/bin/dosefgpu_driftcorr'):
+	if os.path.exists('/home/EM_Packages/motioncorr_v2.1/bin/dosefgpu_driftcorr'):
                 return '/home/EM_Packages/motioncorr_v2.1/bin/dosefgpu_driftcorr'
 		
 #==============================
