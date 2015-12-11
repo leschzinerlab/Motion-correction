@@ -90,7 +90,11 @@ def convtif2mrc(params):
 		cmd = 'rm -rf %s.mrc' %(mrcs[:-4])
 		print cmd
                 subprocess.Popen(cmd,shell=True).wait()
-		
+
+    if params['gain_normalize'] is True:
+         cmd = 'rm -rf %s/gatan_gain_Ref.mrc' %(params['dir'])
+         print cmd
+         subprocess.Popen(cmd,shell=True).wait()		
 #=============================
 def getimodPath():
 
