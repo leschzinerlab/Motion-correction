@@ -670,4 +670,4 @@ if __name__ == "__main__":
 						#Clean up
 						cmd='rm Micrographs/*.coord Particles/Micrographs/*.vec align_lmbfgs.bash movie.txt coord.txt %s_set*star' %(params['starfile'][:-5])
 						subprocess.Popen(cmd2,shell=True).wait()			
-	
+						sys.exit()	
