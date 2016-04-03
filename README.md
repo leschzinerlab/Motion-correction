@@ -1,23 +1,40 @@
 # Motion correction
 
-The scripts within this repository utilize both whole frame alignments (runMotionCorrection.py --> dosef_motioncorr) [Li et al. 2013] (http://www.ncbi.nlm.nih.gov/pubmed/23644547) as well as per-particle movie alignment (runLMBFGS_relion.py --> lm-bfgs) (Source). 
+The scripts within this repository utilize both two different approachs for aligning movies collected with a K2 Summit direct electron detector: 
 
-While both of these programs utilize underlying GPU or fortan code, we have written python wrappers to improve the workflow in using these programs.
+* Whole movie frame alignment:
+  * runMotionCorrection.py
+     * Which runs dosefgpu_driftcorr published by [Li et al. 2013]  (http://www.ncbi.nlm.nih.gov/pubmed/23644547) 
 
-# Software dependencies
+* Per-particle alignment: 
+  * runLMBFGS_relion.py
+     * Which runs alignparts_lmbfgs.exe published by [Rubinstein & Brubaker 2015] (http://arxiv.org/abs/1409.6789)
 
-## dosef_motioncorr
+__Table of contents:__
+
+1. Software dependencies 
+2. Whole frame alignment using runMotionCorrection.py
+3. Per-particle alignment using runLMBFGS_relion.py
+
+## Software dependencies
+
+### runMotionCorrection.py (dosefgpu_motioncorr)
 
 You must have a GPU processor installed on your workstation with at least 4 GB of GPU memory (e.g. NVIDIA Tesla K10).
 
 CUDA-5.0 libraries must be installed on the GPU and be placed into your path before you can execute this program:
 
-   PATH: /usr/local/cuda-5.0/bin
-   LD_LIBRARY_PATH: /usr/local/cuda-5.0/lib64
+```PATH: /usr/local/cuda-5.0/bin
+LD_LIBRARY_PATH: /usr/local/cuda-5.0/lib64```
 
-## LM-BFGS
+### runLMBFGS_relion.py (alignparts_lmbfgs.exe)
 
-##runMotionCorr.py
+Work in progress
 
-This is a python wrapper script that will run this motion correction software. 
+## Whole frame alignment using runMotionCorrection.py
 
+Work in progress
+
+## Per-particle alignment using runLMBFGS_relion.py
+
+Work in progress
