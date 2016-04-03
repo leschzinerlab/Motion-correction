@@ -1,5 +1,6 @@
 #!/usr/bin/env python 
 
+from __future__ import division
 import shutil
 import optparse
 from sys import *
@@ -22,6 +23,8 @@ def setupParserOptions():
                 help="Radius of particles in pixels")
 	parser.add_option("--trialrun",action='store_true',dest="trialrun",default=False,
                 help="Flag to run lm-bfgs on a single movie to check particle trajectories and to show vector field plot (Default=False)")
+	parser.add_option("--nprocs",dest="nprocs",type="int",metavar="INTEGER",default=1,
+                help="Number of CPUs for parallelization. (Default=1)")
 	parser.add_option("--exepath",dest="exepath",type="string",metavar="PATH",default='lm-bfgs_v3.0/',
                 help="Optional: Path to executable files. (Default=lm-bfgs_v3.0/)")
 	parser.add_option("--movieNAME",dest="movieEXT1",type="string",metavar="Movie extension",default='.frames',
@@ -148,6 +151,116 @@ def getRelionColumnIndex(star,rlnvariable):
 
         i=i+1
 
+#================================
+def splitSTAR(starfile,nprocs,debug):
+
+	#Check if other files exist
+	i=1
+	while i<=nprocs:
+		if os.path.exists('%s_set%i.star' %(starfile[:-5],nprocs)):
+			os.remove('%s_set%i.star' %(starfile[:-5],nprocs))	
+		i=i+1
+
+	#Get number of micrographs
+	counter=0
+	currentMicro='blank.mrc'
+	for line in open(starfile,'r'):
+		if len(line)>50:
+		
+			if line.split()[0] != currentMicro:
+				currentMicro=line.split()[0]
+				counter=counter+1
+
+	if debug is True:
+		print 'Number of micrographs = %i' %(counter)
+
+	if counter < nprocs:
+		nprocs=counter
+
+	if debug is True:
+		print 'Nprocs=%i' %(nprocs)
+	
+	#Check if even division:
+	if counter % nprocs == 0: 
+		group=float(counter)/float(nprocs)
+
+	if counter % nprocs != 0:
+		group=counter/nprocs + nprocs
+
+	if debug is True:
+		print 'Splitting star file %s into %i groups with %i micrographs in each file' %(starfile,nprocs,int(group))
+
+	groupcount=1
+	grouptot=nprocs
+
+	while groupcount <= grouptot:
+		if debug is True:
+			print 'Working on creating group %i' %(groupcount)
+
+		#Open file & write header, keeping track of number o flines in header
+		o1=open('%s_set%i.star' %(starfile[:-5],groupcount),'w')
+
+		headerlength=0
+		totlines=0
+		for line in open(starfile,'r'):
+
+			if len(line)<50:
+				o1.write(line)
+				headerlength=headerlength+1
+
+			totlines=1+totlines
+
+		counterpart=1
+		currentMicro='blank.mrc'
+		countermicro=0
+		
+		while counterpart < totlines:
+
+			line=linecache.getline(starfile,counterpart)
+
+			if len(line) < 50:
+				counterpart=counterpart+1
+				continue
+
+			micro=line.split()[0]
+
+			if micro != currentMicro:
+				if debug is True:
+					print 'Micro query %s does not match currentMicro %s' %(micro, currentMicro) 
+					print 'Incrementing countermicro from %i to %i' %(countermicro,countermicro+1)
+				currentMicro=micro	
+				countermicro=countermicro+1
+
+			if countermicro == groupcount:
+				o1.write(line)
+			
+			counterpart=counterpart+1
+
+		o1.close()
+
+		groupcount=groupcount+1
+
+	return nprocs	
+
+#=========================
+def combineSTARfiles(basename,nprocs,outfile):
+
+	nproc=1
+
+	o1=open(outfile,'w')
+	#write header
+	for line in open('%s%i.star' %(basename,1)):
+		if len(line)<50:
+			o1.write(line) 
+
+	while nproc<=nprocs:
+
+		for line in open('%s%i.star' %(basename,nproc)):
+			if len(line)>50:
+				o1.write(line)
+		
+		nproc=nproc+1
+
 #==============================
 if __name__ == "__main__":
 
@@ -232,177 +345,329 @@ if __name__ == "__main__":
 	#Movie list
 	movielist='movie.txt'
 	coordlist='coord.txt'
+	
+	#Running for a trial run
+	if params['nprocs'] == 1 or params['trialrun'] is True:
 
-	cmd='#!/bin/bash\n'
-	cmd+='# Things you need to adjust:\n'
-	cmd+='#********************************************************************\n'
-	cmd+='# locations of executables provided by user\n'
-	cmd+='alignparts_starfilehandler=%s\n' %(lmbstar)
-	cmd+='alignparts_lmbfgs=%s\n' %(lmbfgs)
-	cmd+='#********************************************************************\n'
-	cmd+='# Input and output files, paths, extensions\n'
-	cmd+='instar=%s             # input star file name\n' %(params['starfile'])
-	cmd+='outstar=%s_lmbfgs.star     # output star file name\n' %(params['starfile'][:-5])
-	cmd+='moviepath=Micrographs/                                # directory where movies are located (input)\n' 
-	cmd+='particlepath=Particles/Micrographs/                   # directory where particles are located (output)\n'
-	cmd+='movieflag=%s                                 # what to add to the micrograph name to get the movie name (use \"\" to indicate no flag)\n' %(params['movieEXT1'])
-	cmd+='movieext=%s                                    # what to change the micrograph extension to to get the movie name\n' %(params['movieEXT2'])
-	cmd+='#********************************************************************\n'
-	cmd+='# particle and movie information \n'
-	cmd+='boxsize=%i                    # boxsize for particles (in pixels)\n' %(int(boxsize))
-	cmd+='particleradius=%i              # radius for particles within box (in pixels)\n' %(params['radius'])
-	cmd+='pixelsize=%f                 # pixel size (in Angstroms)\n' %(pixelSize)
-	cmd+='framex=%i                    # x-dimension of movies (in pixels)\n' %(int(movieDIMX))
-	cmd+='framey=%i                    # y-dimension of movies (in pixels)\n' %(int(movieDIMY))
-	cmd+='#********************************************************************\n'
-	cmd+='# frame information provided\n'
-	cmd+='framefirstali=%i                # first frame to be used in alignment\n' %(params['firstframe'])
-	cmd+='framelastali=%i                # last frame to be used in alignment\n' %(int(params['lastframe']))
-	cmd+='framefirstave=%i                # first frame to be used in average of frames\n' %(params['firstframe'])
-	cmd+='framelastave=%i                # last frame to be used in average of frames\n'%(int(params['lastframe']))
-	cmd+='#********************************************************************\n'
-	cmd+='# trajectory smoothing information provided by user\n'
-	cmd+='smooth=%s                   # specifies the amount of smoothing forced on trajectories of particles\n' %(params['smooth'])
-	cmd+='zeroframe=%i                   # which frame is considers as unshifted (MUST MATCH THE ZEROFRAME FOR WHOLE FRAME ALIGNMENT)\n' %(zeroframe)
-	cmd+='exaggerate=%i                   # factor by which particle trajectories should be exaggerated in vector file\n' %(params['exaggerate'])
-	cmd+='invertoutput=0                 # 1 inverts output from movie densities, 0 does not\n'
-	cmd+='localavg=1                     # 1 performs local averaging of trajectories, 0 turns off this feature\n'
-	cmd+='localavgsigma=500              # the standard deviation used to weight local averaging\n'
-	cmd+='#********************************************************************\n'
-	cmd+='# Exposure weighting (optional)\n'
-	if params['exposureweight'] is True:
-		weight=1
-	if params['exposureweight'] is False:
-		weight=0
-	cmd+='expweight=%i                    # 1 turns on exposure weighting, 0 turns off exposure weighting\n' %(weight)
-	cmd+='akv=%i                        # microscope accelerating voltage in kV\n' %(kev)
-	cmd+='expperframe=%f                # Exposure per frame in electrons per Angstrom squared\n' %(params['dose'])
-	cmd+='# Things you do not need to adjust:\n'
-	cmd+='#=================================================================\n'
-	cmd+='# Files and info generated by alignparts_starfilehandler and used by alignparts_lmbfgs\n'	
-	cmd+='lmbfgsflag=_lmbfgs             # file name modifier for locally aligned particle stacks\n'
-	cmd+='lmbfgsext=mrcs                 # extension for locally aligned particle stacks\n'
-	cmd+='movielist=%s           # name of list of movie files\n' %(movielist)
-	cmd+='coordlist=%s           # name of list of coordinate files\n'%(coordlist)
-	cmd+='vecext=vec                     # extension for output vector files\n'
-	cmd+='# Alignparts_lmbfgs variables that do not usually need adjustment\n'
-	cmd+='maxparts=100000                # maximum number of particles that may be in a micrograph\n'
-	cmd+='nsigma=5                       # standard deviations above the mean to remove outlier pixels\n'
-	cmd+='rmax1=500                      # Low resolution cutoff (in Angstroms) used for alignment\n'
-	cmd+='rmax2=40                       # High resolution cutoff (in Angstroms) used for alignment\n'
-	cmd+='bfactor=2000                   # B-factor (in A**2) used for alignment\n'
-	cmd+='factr=1d7                      # Accuracy of minimizer (eg.1.0d7=1.0x10^7 in dble precision)\n'
-	cmd+='#=====================================================================\n'
-	cmd+='time $alignparts_starfilehandler << eot1\n'
-	cmd+='$instar\n'	
-	cmd+='$outstar\n'
-	cmd+='$movielist\n'
-	cmd+='$coordlist\n'
-	cmd+='$boxsize,$framex,$framey\n'
-	cmd+='$moviepath\n'
-	cmd+='$particlepath\n'
-	cmd+='$movieflag\n'
-	cmd+='$movieext\n'
-	cmd+='$lmbfgsflag\n'
-	cmd+='$lmbfgsext\n'	
-	cmd+='eot1\n'
-	if params['trialrun'] is True:
+		cmd='#!/bin/bash\n'
+		cmd+='# Things you need to adjust:\n'
+		cmd+='#********************************************************************\n'
+		cmd+='# locations of executables provided by user\n'
+		cmd+='alignparts_starfilehandler=%s\n' %(lmbstar)
+		cmd+='alignparts_lmbfgs=%s\n' %(lmbfgs)
+		cmd+='#********************************************************************\n'
+		cmd+='# Input and output files, paths, extensions\n'
+		cmd+='instar=%s             # input star file name\n' %(params['starfile'])
+		cmd+='outstar=%s_lmbfgs.star     # output star file name\n' %(params['starfile'][:-5])
+		cmd+='moviepath=Micrographs/                                # directory where movies are located (input)\n' 
+		cmd+='particlepath=Particles/Micrographs/                   # directory where particles are located (output)\n'
+		cmd+='movieflag=%s                                 # what to add to the micrograph name to get the movie name (use \"\" to indicate no flag)\n' %(params['movieEXT1'])
+		cmd+='movieext=%s                                    # what to change the micrograph extension to to get the movie name\n' %(params['movieEXT2'])
+		cmd+='#********************************************************************\n'
+		cmd+='# particle and movie information \n'
+		cmd+='boxsize=%i                    # boxsize for particles (in pixels)\n' %(int(boxsize))
+		cmd+='particleradius=%i              # radius for particles within box (in pixels)\n' %(params['radius'])
+		cmd+='pixelsize=%f                 # pixel size (in Angstroms)\n' %(pixelSize)
+		cmd+='framex=%i                    # x-dimension of movies (in pixels)\n' %(int(movieDIMX))
+		cmd+='framey=%i                    # y-dimension of movies (in pixels)\n' %(int(movieDIMY))
+		cmd+='#********************************************************************\n'
+		cmd+='# frame information provided\n'
+		cmd+='framefirstali=%i                # first frame to be used in alignment\n' %(params['firstframe'])
+		cmd+='framelastali=%i                # last frame to be used in alignment\n' %(int(params['lastframe']))
+		cmd+='framefirstave=%i                # first frame to be used in average of frames\n' %(params['firstframe'])
+		cmd+='framelastave=%i                # last frame to be used in average of frames\n'%(int(params['lastframe']))
+		cmd+='#********************************************************************\n'
+		cmd+='# trajectory smoothing information provided by user\n'
+		cmd+='smooth=%s                   # specifies the amount of smoothing forced on trajectories of particles\n' %(params['smooth'])
+		cmd+='zeroframe=%i                   # which frame is considers as unshifted (MUST MATCH THE ZEROFRAME FOR WHOLE FRAME ALIGNMENT)\n' %(zeroframe)
+		cmd+='exaggerate=%i                   # factor by which particle trajectories should be exaggerated in vector file\n' %(params['exaggerate'])
+		cmd+='invertoutput=0                 # 1 inverts output from movie densities, 0 does not\n'
+		cmd+='localavg=1                     # 1 performs local averaging of trajectories, 0 turns off this feature\n'
+		cmd+='localavgsigma=500              # the standard deviation used to weight local averaging\n'
+		cmd+='#********************************************************************\n'
+		cmd+='# Exposure weighting (optional)\n'
+		if params['exposureweight'] is True:
+			weight=1
+		if params['exposureweight'] is False:
+			weight=0
+		cmd+='expweight=%i                    # 1 turns on exposure weighting, 0 turns off exposure weighting\n' %(weight)
+		cmd+='akv=%i                        # microscope accelerating voltage in kV\n' %(kev)
+		cmd+='expperframe=%f                # Exposure per frame in electrons per Angstrom squared\n' %(params['dose'])
+		cmd+='# Things you do not need to adjust:\n'
+		cmd+='#=================================================================\n'
+		cmd+='# Files and info generated by alignparts_starfilehandler and used by alignparts_lmbfgs\n'	
+		cmd+='lmbfgsflag=_lmbfgs             # file name modifier for locally aligned particle stacks\n'
+		cmd+='lmbfgsext=mrcs                 # extension for locally aligned particle stacks\n'
+		cmd+='movielist=%s           # name of list of movie files\n' %(movielist)
+		cmd+='coordlist=%s           # name of list of coordinate files\n'%(coordlist)
+		cmd+='vecext=vec                     # extension for output vector files\n'
+		cmd+='# Alignparts_lmbfgs variables that do not usually need adjustment\n'
+		cmd+='maxparts=100000                # maximum number of particles that may be in a micrograph\n'
+		cmd+='nsigma=5                       # standard deviations above the mean to remove outlier pixels\n'
+		cmd+='rmax1=500                      # Low resolution cutoff (in Angstroms) used for alignment\n'
+		cmd+='rmax2=40                       # High resolution cutoff (in Angstroms) used for alignment\n'
+		cmd+='bfactor=2000                   # B-factor (in A**2) used for alignment\n'
+		cmd+='factr=1d7                      # Accuracy of minimizer (eg.1.0d7=1.0x10^7 in dble precision)\n'
+		cmd+='#=====================================================================\n'
+		cmd+='time $alignparts_starfilehandler << eot1\n'
+		cmd+='$instar\n'	
+		cmd+='$outstar\n'
+		cmd+='$movielist\n'
+		cmd+='$coordlist\n'
+		cmd+='$boxsize,$framex,$framey\n'
+		cmd+='$moviepath\n'
+		cmd+='$particlepath\n'
+		cmd+='$movieflag\n'
+		cmd+='$movieext\n'
+		cmd+='$lmbfgsflag\n'
+		cmd+='$lmbfgsext\n'	
+		cmd+='eot1\n'
 		cmd+='\n'
-		if os.path.exists('tmp12222.txt'):
-			os.remove('tmp12222.txt')
-		cmd+='mv $movielist tmp12222.txt\n'
-		cmd+='head -1 tmp12222.txt > $movielist\n'
-		if os.path.exists('tmp12223.txt'):
-                        os.remove('tmp12223.txt')
-                cmd+='mv $coordlist tmp12223.txt\n'
-                cmd+='head -1 tmp12223.txt > $coordlist\n'
-		cmd+='rm tmp12222.txt\n'
-		cmd+='rm tmp12223.txt\n'
-	cmd+='time $alignparts_lmbfgs << eot2\n'
-	cmd+='$movielist\n'
-	cmd+='$coordlist\n'
-	cmd+='$boxsize,0,$particleradius,$pixelsize,$nsigma,$rmax1,$rmax2\n'
-	cmd+='$expweight,$akv,$expperframe\n'
-	cmd+='$bfactor,$smooth,$exaggerate,$zeroframe,$invertoutput\n'
-	cmd+='$localavg,$maxparts,$localavgsigma\n'
-	cmd+='$framefirstali,$framelastali,$framefirstave,$framelastave\n'
-	cmd+='$factr\n'
-	cmd+='$moviepath\n'
-	cmd+='$particlepath\n'
-	cmd+='$lmbfgsflag\n'
-	cmd+='$vecext\n'
-	cmd+='$lmbfgsext\n'
-	cmd+='eot2\n'
+		if params['trialrun'] is True:
+			if os.path.exists('tmp12222.txt'):
+				os.remove('tmp12222.txt')
+			cmd+='mv $movielist tmp12222.txt\n'
+			cmd+='head -1 tmp12222.txt > $movielist\n'
+			if os.path.exists('tmp12223.txt'):
+       	        	        os.remove('tmp12223.txt')
+                	cmd+='mv $coordlist tmp12223.txt\n'
+                	cmd+='head -1 tmp12223.txt > $coordlist\n'
+			cmd+='rm tmp12222.txt\n'
+			cmd+='rm tmp12223.txt\n'
+		cmd+='time $alignparts_lmbfgs << eot2\n'
+		cmd+='$movielist\n'
+		cmd+='$coordlist\n'
+		cmd+='$boxsize,0,$particleradius,$pixelsize,$nsigma,$rmax1,$rmax2\n'
+		cmd+='$expweight,$akv,$expperframe\n'
+		cmd+='$bfactor,$smooth,$exaggerate,$zeroframe,$invertoutput\n'
+		cmd+='$localavg,$maxparts,$localavgsigma\n'
+		cmd+='$framefirstali,$framelastali,$framefirstave,$framelastave\n'
+		cmd+='$factr\n'
+		cmd+='$moviepath\n'
+		cmd+='$particlepath\n'
+		cmd+='$lmbfgsflag\n'
+		cmd+='$vecext\n'
+		cmd+='$lmbfgsext\n'
+		cmd+='eot2\n'
 
-	run = open('align_lmbfgs.bash','w')
-        run.write(cmd)
-        run.close()
+		run = open('align_lmbfgs.bash','w')
+        	run.write(cmd)
+        	run.close()
 
-        cmd2 = 'chmod +x align_lmbfgs.bash'
-        subprocess.Popen(cmd2,shell=True).wait()	
+        	cmd2 = 'chmod +x align_lmbfgs.bash'
+        	subprocess.Popen(cmd2,shell=True).wait()	
 
-	print '\nRunning LM-BFGS ...\n'
+		print '\nRunning LM-BFGS ...\n'
 
-	cmd3 = './align_lmbfgs.bash'
-	subprocess.Popen(cmd3,shell=True).wait()
+		cmd3 = './align_lmbfgs.bash'
+		subprocess.Popen(cmd3,shell=True).wait()
 
-	if params['debug'] is False:
-		os.remove('align_lmbfgs.bash')
-
-	if params['trialrun'] is True:
+		if params['debug'] is False:
+			os.remove('align_lmbfgs.bash')
 
 		print '\nLM-BFGS finished.\n'
 
-		print '\nPlotting vector field...\n'
-		print '\nPress [Enter] to advance\n'
+		if params['trialrun'] is True:
+			print '\nPlotting vector field...\n'
+			print '\nPress [Enter] to advance\n'
 
-		#Get only vector file created
-		particle=linecache.getline('coord.txt',1).split('/')[-1]	
+			#Get only vector file created
+			particle=linecache.getline('coord.txt',1).split('/')[-1]	
 
-		vec='set size square\n'
-		vec+='set xrange [1:%i]\n' %(int(movieDIMX))
-       	 	vec+='set yrange [1:%i]\n' %(int(movieDIMY))
-		vec+='set palette defined (0 "black", 1 "red", 2 "orange", 3 "green", 4 "blue")\n'
-		vec+='file1 = "Particles/Micrographs/%s_lmbfgs.vec"\n' %(particle[:-(7)])
-		vec+='pointsize = 0.5\n'
-		vec+='plot file1 u 2:3:1 w l lc palette\n'
-		vec+='pause -1\n'
+			vec='set size square\n'
+			vec+='set xrange [1:%i]\n' %(int(movieDIMX))
+       		 	vec+='set yrange [1:%i]\n' %(int(movieDIMY))
+			vec+='set palette defined (0 "black", 1 "red", 2 "orange", 3 "green", 4 "blue")\n'
+			vec+='file1 = "Particles/Micrographs/%s_lmbfgs.vec"\n' %(particle[:-(7)])
+			vec+='pointsize = 0.5\n'
+			vec+='plot file1 u 2:3:1 w l lc palette\n'
+			vec+='pause -1\n'
 
-		if os.path.exists('gnuplotvectorfield.script'):
-			os.remove('gnuplotvectorfield.script')
+			if os.path.exists('gnuplotvectorfield.script'):
+				os.remove('gnuplotvectorfield.script')
 
-		run = open('gnuplotvectorfield.script','w')
-	        run.write(vec)
+			run = open('gnuplotvectorfield.script','w')
+	        	run.write(vec)
+        		run.close()
+
+        		cmd3 = 'gnuplot gnuplotvectorfield.script'
+        		subprocess.Popen(cmd3,shell=True).wait()
+	
+			print '\nWriting post-script file of vector trajectories\n'
+			print '\nPress [Enter] to finish\n'
+
+			if os.path.exists("Particles/Micrographs/%s_vectorTrajectories.ps" %(particle[:-(7)])):
+				os.remove("Particles/Micrographs/%s_vectorTrajectories.ps" %(particle[:-(7)]))
+
+			vec='set term postscript\n'
+        		vec+='set output "Particles/Micrographs/%s_vectorTrajectories.ps"\n' %(particle[:-(7)])
+			vec+='set size square\n'
+                	vec+='set xrange [1:%i]\n' %(int(movieDIMX))
+                	vec+='set yrange [1:%i]\n' %(int(movieDIMY))
+                	vec+='set palette defined (0 "black", 1 "red", 2 "orange", 3 "green", 4 "blue")\n'
+                	vec+='file1 = "Particles/Micrographs/%s_lmbfgs.vec"\n' %(particle[:-(7)])
+	                vec+='pointsize = 0.5\n'
+	   	        vec+='plot file1 u 2:3:1 w l lc palette\n'
+       	         	vec+='pause -1\n'
+			vec+='set term x11\n'
+
+                	if os.path.exists('gnuplotvectorfield.script'):
+                        	os.remove('gnuplotvectorfield.script')
+
+                	run = open('gnuplotvectorfield.script','w')
+                	run.write(vec)
+                	run.close()
+
+                	cmd3 = 'gnuplot gnuplotvectorfield.script'
+               		subprocess.Popen(cmd3,shell=True).wait()
+
+	if params['trialrun'] is False and params['nprocs'] >1:
+
+		cmd='#!/bin/bash\n'
+		cmd+='# Things you need to adjust:\n'
+		cmd+='#********************************************************************\n'
+		cmd+='# locations of executables provided by user\n'
+		cmd+='alignparts_starfilehandler=%s\n' %(lmbstar)
+		cmd+='alignparts_lmbfgs=%s\n' %(lmbfgs)
+		cmd+='#********************************************************************\n'
+		cmd+='# Input and output files, paths, extensions\n'
+		cmd+='instar=$1             # input star file name\n' 
+		cmd+='outstar=${1%.*}_lmbfgs_set${2}.star     # output star file name\n' 
+		cmd+='moviepath=Micrographs/                                # directory where movies are located (input)\n' 
+		cmd+='particlepath=Particles/Micrographs/                   # directory where particles are located (output)\n'
+		cmd+='movieflag=%s                                 # what to add to the micrograph name to get the movie name (use \"\" to indicate no flag)\n' %(params['movieEXT1'])
+		cmd+='movieext=%s                                    # what to change the micrograph extension to to get the movie name\n' %(params['movieEXT2'])
+		cmd+='#********************************************************************\n'
+		cmd+='# particle and movie information \n'
+		cmd+='boxsize=%i                    # boxsize for particles (in pixels)\n' %(int(boxsize))
+		cmd+='particleradius=%i              # radius for particles within box (in pixels)\n' %(params['radius'])
+		cmd+='pixelsize=%f                 # pixel size (in Angstroms)\n' %(pixelSize)
+		cmd+='framex=%i                    # x-dimension of movies (in pixels)\n' %(int(movieDIMX))
+		cmd+='framey=%i                    # y-dimension of movies (in pixels)\n' %(int(movieDIMY))
+		cmd+='#********************************************************************\n'
+		cmd+='# frame information provided\n'
+		cmd+='framefirstali=%i                # first frame to be used in alignment\n' %(params['firstframe'])
+		cmd+='framelastali=%i                # last frame to be used in alignment\n' %(int(params['lastframe']))
+		cmd+='framefirstave=%i                # first frame to be used in average of frames\n' %(params['firstframe'])
+		cmd+='framelastave=%i                # last frame to be used in average of frames\n'%(int(params['lastframe']))
+		cmd+='#********************************************************************\n'
+		cmd+='# trajectory smoothing information provided by user\n'
+		cmd+='smooth=%s                   # specifies the amount of smoothing forced on trajectories of particles\n' %(params['smooth'])
+		cmd+='zeroframe=%i                   # which frame is considers as unshifted (MUST MATCH THE ZEROFRAME FOR WHOLE FRAME ALIGNMENT)\n' %(zeroframe)
+		cmd+='exaggerate=%i                   # factor by which particle trajectories should be exaggerated in vector file\n' %(params['exaggerate'])
+		cmd+='invertoutput=0                 # 1 inverts output from movie densities, 0 does not\n'
+		cmd+='localavg=1                     # 1 performs local averaging of trajectories, 0 turns off this feature\n'
+		cmd+='localavgsigma=500              # the standard deviation used to weight local averaging\n'
+		cmd+='#********************************************************************\n'
+		cmd+='# Exposure weighting (optional)\n'
+		if params['exposureweight'] is True:
+			weight=1
+		if params['exposureweight'] is False:
+			weight=0
+		cmd+='expweight=%i                    # 1 turns on exposure weighting, 0 turns off exposure weighting\n' %(weight)
+		cmd+='akv=%i                        # microscope accelerating voltage in kV\n' %(kev)
+		cmd+='expperframe=%f                # Exposure per frame in electrons per Angstrom squared\n' %(params['dose'])
+		cmd+='# Things you do not need to adjust:\n'
+		cmd+='#=================================================================\n'
+		cmd+='# Files and info generated by alignparts_starfilehandler and used by alignparts_lmbfgs\n'	
+		cmd+='lmbfgsflag=_lmbfgs             # file name modifier for locally aligned particle stacks\n'
+		cmd+='lmbfgsext=mrcs                 # extension for locally aligned particle stacks\n'
+		cmd+='movielist=%s           # name of list of movie files\n' %(movielist)
+		cmd+='coordlist=%s           # name of list of coordinate files\n'%(coordlist)
+		cmd+='vecext=vec                     # extension for output vector files\n'
+		cmd+='# Alignparts_lmbfgs variables that do not usually need adjustment\n'
+		cmd+='maxparts=100000                # maximum number of particles that may be in a micrograph\n'
+		cmd+='nsigma=5                       # standard deviations above the mean to remove outlier pixels\n'
+		cmd+='rmax1=500                      # Low resolution cutoff (in Angstroms) used for alignment\n'
+		cmd+='rmax2=40                       # High resolution cutoff (in Angstroms) used for alignment\n'
+		cmd+='bfactor=2000                   # B-factor (in A**2) used for alignment\n'
+		cmd+='factr=1d7                      # Accuracy of minimizer (eg.1.0d7=1.0x10^7 in dble precision)\n'
+		cmd+='#=====================================================================\n'
+		cmd+='time $alignparts_starfilehandler << eot1\n'
+		cmd+='$instar\n'	
+		cmd+='$outstar\n'
+		cmd+='$movielist\n'
+		cmd+='$coordlist\n'
+		cmd+='$boxsize,$framex,$framey\n'
+		cmd+='$moviepath\n'
+		cmd+='$particlepath\n'
+		cmd+='$movieflag\n'
+		cmd+='$movieext\n'
+		cmd+='$lmbfgsflag\n'
+		cmd+='$lmbfgsext\n'	
+		cmd+='eot1\n'
+		cmd+='\n'
+		
+		cmd+='time $alignparts_lmbfgs << eot2\n'
+		cmd+='$movielist\n'
+		cmd+='$coordlist\n'
+		cmd+='$boxsize,0,$particleradius,$pixelsize,$nsigma,$rmax1,$rmax2\n'
+		cmd+='$expweight,$akv,$expperframe\n'
+		cmd+='$bfactor,$smooth,$exaggerate,$zeroframe,$invertoutput\n'
+		cmd+='$localavg,$maxparts,$localavgsigma\n'
+		cmd+='$framefirstali,$framelastali,$framefirstave,$framelastave\n'
+		cmd+='$factr\n'
+		cmd+='$moviepath\n'
+		cmd+='$particlepath\n'
+		cmd+='$lmbfgsflag\n'
+		cmd+='$vecext\n'
+		cmd+='$lmbfgsext\n'
+		cmd+='eot2\n'
+
+		run = open('align_lmbfgs.bash','w')
+        	run.write(cmd)
         	run.close()
 
-        	cmd3 = 'gnuplot gnuplotvectorfield.script'
-        	subprocess.Popen(cmd3,shell=True).wait()
+        	cmd2 = 'chmod +x align_lmbfgs.bash'
+        	subprocess.Popen(cmd2,shell=True).wait()	
+
+		print '\nRunning LM-BFGS ...\n'
+
+		actualnprocs=splitSTAR(params['starfile'],params['nprocs'],params['debug'])
+
+		if params['debug'] is True:
+			print 'Actual nprocs=%i' %(actualnprocs)
+
+		nproc=1
+
+		while nproc <= actualnprocs:
+
+			cmd3 = './align_lmbfgs.bash %s_set%i.star %i'%(params['starfile'][:-5],nproc,nproc)
+			subprocess.Popen(cmd3,shell=True)
+			time.sleep(5)
+			nproc=nproc+1
+
+		combineSTARfiles('%s_set' %(params['starfile'][:-5]),actualnprocs,'%s_lmbfgs.star' %(params['starfile'][:-5]))
+
+		#check to see if completed
+
+		time.sleep(10)
+
+		testnum=0
+		testnumcounter=1
+
+		while testnumcounter<=500:
+
+			time.sleep(20)
 	
-		print '\nWriting post-script file of vector trajectories\n'
-		print '\nPress [Enter] to finish\n'
+			testnum2=len(glob.glob('Particles/Micrographs/*.vec'))
 
-		if os.path.exists("Particles/Micrographs/%s_vectorTrajectories.ps" %(particle[:-(7)])):
-			os.remove("Particles/Micrographs/%s_vectorTrajectories.ps" %(particle[:-(7)]))
+			if testnum2 != testnum:
+				testnum=testnum2
+				testnumcounter=testnumcounter+1
+				continue
 
-		vec='set term postscript\n'
-        	vec+='set output "Particles/Micrographs/%s_vectorTrajectories.ps"\n' %(particle[:-(7)])
-		vec+='set size square\n'
-                vec+='set xrange [1:%i]\n' %(int(movieDIMX))
-                vec+='set yrange [1:%i]\n' %(int(movieDIMY))
-                vec+='set palette defined (0 "black", 1 "red", 2 "orange", 3 "green", 4 "blue")\n'
-                vec+='file1 = "Particles/Micrographs/%s_lmbfgs.vec"\n' %(particle[:-(7)])
-                vec+='pointsize = 0.5\n'
-                vec+='plot file1 u 2:3:1 w l lc palette\n'
-                vec+='pause -1\n'
-		vec+='set term x11\n'
+			if testnum2 == testnum:
+				time.sleep(20)
+				testnum3=len(glob.glob('Particles/Micrographs/*.vec'))
+				if testnum3 == testnum:
+					time.sleep(60)
+					testnum4=len(glob.glob('Particles/Micrographs/*.vec'))
 
-                if os.path.exists('gnuplotvectorfield.script'):
-                        os.remove('gnuplotvectorfield.script')
+					if testnum4 == testnum:
+						print 'LM-BFGS finished.\n'
 
-                run = open('gnuplotvectorfield.script','w')
-                run.write(vec)
-                run.close()
-
-                cmd3 = 'gnuplot gnuplotvectorfield.script'
-                subprocess.Popen(cmd3,shell=True).wait()
+						#Clean up
+						cmd='rm Micrographs/*.coord Particles/Micrographs/*.vec align_lmbfgs.bash movie.txt coord.txt %s_set*star' %(params['starfile'][:-5])
+						subprocess.Popen(cmd2,shell=True).wait()			
 	
