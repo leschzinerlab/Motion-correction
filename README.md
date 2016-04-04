@@ -12,9 +12,9 @@ The scripts within this repository utilize both two different approachs for alig
 
 __Table of contents:__
 
-1. Software dependencies 
-2. Whole frame alignment using runMotionCorrection.py
-3. Per-particle alignment using runLMBFGS_relion.py
+1. [Software dependencies] (https://github.com/leschzinerlab/Motion-correction#software-dependencies) 
+2. [Whole frame alignment using runMotionCorrection.py] (https://github.com/leschzinerlab/Motion-correction#whole-frame-alignment-using-runmotioncorrectionpy) 
+3. [Per-particle alignment using runLMBFGS_relion.py] (https://github.com/leschzinerlab/Motion-correction#per-particle-alignment-using-runlmbfgs_relionpy)
 
 ## Software dependencies
 
@@ -25,11 +25,14 @@ You must have a GPU processor installed on your workstation with at least 4 GB o
 CUDA-5.0 libraries must be installed on the GPU and be placed into your path before you can execute this program:
 
 ```PATH: /usr/local/cuda-5.0/bin```
+
 ```LD_LIBRARY_PATH: /usr/local/cuda-5.0/lib64```
 
 #### runLMBFGS_relion.py (alignparts_lmbfgs.exe)
 
-Work in progress
+Within this repository we are including a pre-compiled alignparts_lmbfgs.exe program that was compiled on CentOS 7. To learn more about downloading the fortan source code and compiling, check out: 
+
+[Rubinstein Lab Google Sites Scripts Repository] (https://sites.google.com/site/rubinsteingroup/direct-detector-align_lmbfgs)
 
 ## Whole frame alignment using runMotionCorrection.py
 
