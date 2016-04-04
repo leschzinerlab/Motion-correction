@@ -24,9 +24,8 @@ You must have a GPU processor installed on your workstation with at least 4 GB o
 
 CUDA-5.0 libraries must be installed on the GPU and be placed into your path before you can execute this program:
 
-```PATH: /usr/local/cuda-5.0/bin```
-
-```LD_LIBRARY_PATH: /usr/local/cuda-5.0/lib64```
+<pre>PATH: /usr/local/cuda-5.0/bin
+LD_LIBRARY_PATH: /usr/local/cuda-5.0/lib64</pre>
 
 #### runLMBFGS_relion.py (alignparts_lmbfgs.exe)
 
@@ -36,6 +35,55 @@ Within this repository we are including a pre-compiled alignparts_lmbfgs.exe pro
 
 ## Whole frame alignment using runMotionCorrection.py
 
+### Inputs
+
+As the program is currently written, it will normalize and align UN-normalized movies that were collected using Leginon. This means that it expects the following inputs: 
+
+* Movies with the extension '.frames.mrcs'
+* Gain reference '.mrc' file that has the same dimensions as the movies
+
+### Running the program
+
+<pre>$  Motion-correction/runMotionCorr.py 
+Usage: runMotionCorr.py --dir=<folder with mrc frames> --gain_ref=<gain reference in mrc format with full path;input the *_norm* file from the leginon reference directory> --save_bin <save binned mic> --save_norm <save normalized frames>
+
+This program takes movies with .frames.mrcs extensions and creates aligned movies with .mrc extension, along with the option to create normalized movies with the .mrcs extension.
+
+Options:
+  -h, --help       show this help message and exit
+  --dir=FILE       Directory containing direct detector movies (.frames.mrcs
+                   extension)
+  --gain_ref=FILE  Gain reference file from Leginon with the full path (.mrc)
+  --save_bin       Save binned image for quick inspection
+  --save_norm      Save normalized movie frames as .mrcs
+  --bin=INT        Binning factor to use during movie alignment, 1 or 2.
+                   (Default=1)
+  -d               debug</pre>
+  
+Running notes: 
+
+* To run this program, make sure that only the movies you want aligned are within a specified directory and have the '.frames.mrcs' extension.
+* Specify the absolute paths to the directory with movies and to the gain reference .mrc file
+
+Example command: 
+
+<pre>$ Motion-correction/runMotionCorr.py --dir=/data/frames/leginon/15sep30a/rawdata/ --gain_ref=/data/frames/leginon/15sep30a_ref/rawdata/15sep30a_31115207_07_7676x7420_norm_1.mrc --bin=2</pre>
+
+### Outputs
+
+The program will then align each movie using its GPU cores to produce files with the extension '.mrc'. 
+
+For example, if you had the input micrograph: 
+
+<pre>/data/frames/leginon/15sep30a/rawdata/15sep30a_b1_1e_00009gr_00003sq_00007hl_00001en.frames.mrcs</pre>
+
+You would get: 
+
+<pre>/data/frames/leginon/15sep30a/rawdata/15sep30a_b1_1e_00009gr_00003sq_00007hl_00001en.mrc</pre>
+
+And, if you asked for normalized movie frames as an output with the <pre>--save_norm</pre> option,  you would also get: 
+
+<pre>/data/frames/leginon/15sep30a/rawdata/15sep30a_b1_1e_00009gr_00003sq_00007hl_00001en.mrcs</pre>
 Work in progress
 
 ## Per-particle alignment using runLMBFGS_relion.py
