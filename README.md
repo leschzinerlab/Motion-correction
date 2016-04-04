@@ -145,7 +145,7 @@ Options:
   * --radius - radius of particle in pixels
   * --trialrun - IMPORTANT: As described on [Rubinstein Lab Google site] (https://sites.google.com/site/rubinsteingroup/direct-detector-align_lmbfgs), they recommend check the smoothened trajectories to check if the program is work satisfactorily. To check this on a single micorgraph, include this flag. At the end of the particle trajectory alignment, you will be shown a plot of particle trajectories.
   
- ___Optional inputs: ___
+ ___Optional inputs:___
   * --nprocs - Specify number of processors for parallelizing the particle trajectory alignment. Only works on a single machine, not a cluster (at the moment).
   * --execpath - Input absolute path to compiled program 'alignparts_lmbfgs.exe'. By default, it will look in the folder provided by this Github repo: Motion-correction/lm-bfgs_v3.0/. 
   * --movieName - Additional name for movies. This is NOT the movie file extension, just additional text that differentiates the movie (if at all) from the aligned micrograph.
