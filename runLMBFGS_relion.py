@@ -26,7 +26,7 @@ def setupParserOptions():
 	parser.add_option("--nprocs",dest="nprocs",type="int",metavar="INTEGER",default=1,
                 help="Number of CPUs for parallelization. (Default=1)")
 	parser.add_option("--exepath",dest="exepath",type="string",metavar="PATH",default='lm-bfgs_v3.0/',
-                help="Optional: Path to executable files. (Default=lm-bfgs_v3.0/)")
+                help="Optional: Path to executable files. (Default=Motion-correction/lm-bfgs_v3.0/)")
 	parser.add_option("--movieNAME",dest="movieEXT1",type="string",metavar="Movie extension",default='.frames',
                 help="Optional: Additional name for movies. (Default=.frames)")
 	parser.add_option("--movieEXT",dest="movieEXT2",type="string",metavar="Movie extension",default='mrcs',
