@@ -215,7 +215,14 @@ def splitSTAR(starfile,nprocs,debug):
 		counterpart=1
 		currentMicro='blank.mrc'
 		countermicro=0
-		
+		begingroupnum=float(group)*(groupcount)-(float(group))+1
+		endgroupnum=float(group)*(groupcount)
+
+		if debug is True:
+			print 'Totlines=%i' %(totlines)
+			print 'Begin group num=%f' %(begingroupnum)
+			print 'End group num=%f' %(endgroupnum)
+
 		while counterpart < totlines:
 
 			line=linecache.getline(starfile,counterpart)
@@ -233,8 +240,9 @@ def splitSTAR(starfile,nprocs,debug):
 				currentMicro=micro	
 				countermicro=countermicro+1
 
-			if countermicro == groupcount:
-				o1.write(line)
+			if countermicro >= begingroupnum:
+				if countermicro < endgroupnum:
+					o1.write(line)
 			
 			counterpart=counterpart+1
 
@@ -644,10 +652,11 @@ if __name__ == "__main__":
 		while nproc <= actualnprocs:
 
 			cmd3 = './align_lmbfgs.bash %s_set%i.star %i'%(params['starfile'][:-5],nproc,nproc)
+			if params['debug'] is True:
+				print cmd3
 			subprocess.Popen(cmd3,shell=True)
 			time.sleep(5)
 			nproc=nproc+1
-
 		combineSTARfiles('%s_set' %(params['starfile'][:-5]),actualnprocs,'%s_lmbfgs.star' %(params['starfile'][:-5]))
 
 		#check to see if completed
