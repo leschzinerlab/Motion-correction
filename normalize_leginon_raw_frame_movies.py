@@ -103,6 +103,9 @@ def normalize(params):
 		print cmd
         subprocess.Popen(cmd,shell=True).wait()
 
+	if os.path.exists('tmp.mrcs'):
+		os.remove('tmp.mrcs')
+
 #=============================
 def getimodPath():
 
