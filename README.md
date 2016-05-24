@@ -104,8 +104,7 @@ The script described below assumes that you have the following set up (based upo
 
 ### Running the program
 
-<pre>Motion-correction/runLMBFGS_relion.py 
-Usage: runLMBFGS_relion.py --dir=<folder with micrographs> --bin=<binning>
+<pre>Usage: runLMBFGS_relion.py --star=<relion star> --radius=<radius>
 
 Options:
   -h, --help            show this help message and exit
@@ -116,6 +115,8 @@ Options:
   --trialrun            Flag to run lm-bfgs on a single movie to check
                         particle trajectories and to show vector field plot
                         (Default=False)
+  --invert=INTEGER      Indicate whether to invert contrast (=1) or not (=0)
+                        for output particle stack (Default=1)
   --nprocs=INTEGER      Number of CPUs for parallelization. (Default=1)
   --exepath=PATH        Optional: Path to executable files. (Default=Motion-
                         correction/lm-bfgs_v3.0/)
