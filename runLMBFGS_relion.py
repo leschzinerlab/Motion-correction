@@ -16,7 +16,7 @@ import time
 #=========================
 def setupParserOptions():
         parser = optparse.OptionParser()
-        parser.set_usage("%prog --dir=<folder with micrographs> --bin=<binning>")
+        parser.set_usage("%prog --star=<relion star> --radius=<radius>")
         parser.add_option("--star",dest="starfile",type="string",metavar="FILE",
                 help="Relion starfile with particles. IMPORTANT: Particles must be the same pixel size as the movies for this program to work.")
         parser.add_option("--radius",dest="radius",type="int",metavar="INTEGER",
