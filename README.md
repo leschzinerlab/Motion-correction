@@ -47,7 +47,7 @@ As the program is currently written, it will normalize and align UN-normalized m
 <pre>$  Motion-correction/runMotionCorr.py 
 Usage: runMotionCorr.py --dir=<folder with mrc frames> --gain_ref=<gain reference in mrc format with full path;input the *_norm* file from the leginon reference directory> --save_bin <save binned mic> --save_norm <save normalized frames>
 
-This program takes movies with .frames.mrcs extensions and creates aligned movies with .mrc extension, along with the option to create normalized movies with the .mrcs extension.
+This program takes movies with .mrcs extensions and creates aligned movies with .mrc extension, along with the option to create normalized movies with the .mrcs extension.
 
 Options:
   -h, --help       show this help message and exit
@@ -73,11 +73,11 @@ The program will then align each movie using its GPU cores to produce files with
 
 For example, if you had the input micrograph: 
 
-<pre>/data/frames/leginon/15sep30a/rawdata/15sep30a_b1_1e_00009gr_00003sq_00007hl_00001en.frames_norm.mrcs</pre>
+<pre>/data/frames/leginon/15sep30a/rawdata/15sep30a_b1_1e_00009gr_00003sq_00007hl_00001en.frames.mrcs</pre>
 
 You would get: 
 
-<pre>/data/frames/leginon/15sep30a/rawdata/15sep30a_b1_1e_00009gr_00003sq_00007hl_00001en.mrc</pre>
+<pre>/data/frames/leginon/15sep30a/rawdata/15sep30a_b1_1e_00009gr_00003sq_00007hl_00001en.frames.mrc</pre>
 
 And, if you asked for normalized movie frames as an output with the <pre>--save_norm</pre> option,  you would also get: 
 
