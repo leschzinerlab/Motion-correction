@@ -47,18 +47,19 @@ As the program is currently written, it will normalize and align UN-normalized m
 <pre>$  Motion-correction/runMotionCorr.py 
 Usage: runMotionCorr.py --dir=<folder with mrc frames> --gain_ref=<gain reference in mrc format with full path;input the *_norm* file from the leginon reference directory> --save_bin <save binned mic> --save_norm <save normalized frames>
 
-This program takes movies with .frames.mrcs extensions and creates aligned movies with .mrc extension, along with the option to create normalized movies with the .mrcs extension.
+This program takes movies with .mrcs extensions and creates aligned movies with .mrc extension, along with the option to create normalized movies with the .mrcs extension.
 
 Options:
   -h, --help       show this help message and exit
-  --dir=FILE       Directory containing direct detector movies (.frames.mrcs
+  --dir=FILE       Directory containing direct detector movies (.mrcs
                    extension)
   --gain_ref=FILE  Gain reference file from Leginon with the full path (.mrc)
   --save_bin       Save binned image for quick inspection
-  --save_norm      Save normalized movie frames as .mrcs
+  --save_norm      Save normalized movie frames as norm.mrcs
   --bin=INT        Binning factor to use during movie alignment, 1 or 2.
                    (Default=1)
-  -d               debug</pre>
+  -d               debug
+</pre>
   
 Running notes: 
 
