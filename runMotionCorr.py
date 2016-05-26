@@ -15,15 +15,15 @@ import time
 #=========================
 def setupParserOptions():
         parser = optparse.OptionParser()
-        parser.set_usage("%prog --dir=<folder with mrc frames> --gain_ref=<gain reference in mrc format with full path;input the *_norm* file from the leginon reference directory> --save_bin <save binned mic> --save_norm <save normalized frames>\n\nThis program takes movies with .frames.mrcs extensions and creates aligned movies with .mrc extension, along with the option to create normalized movies with the .mrcs extension.")
+        parser.set_usage("%prog --dir=<folder with mrc frames> --gain_ref=<gain reference in mrc format with full path;input the *_norm* file from the leginon reference directory> --save_bin <save binned mic> --save_norm <save normalized frames>\n\nThis program takes movies with .mrcs extensions and creates aligned movies with .mrc extension, along with the option to create normalized movies with the .mrcs extension.")
         parser.add_option("--dir",dest="dir",type="string",metavar="FILE",
-                    help="Directory containing direct detector movies (.frames.mrcs extension)")
+                    help="Directory containing direct detector movies (.mrcs extension)")
         parser.add_option("--gain_ref",dest="gain_ref",type="string",metavar="FILE",
                     help="Gain reference file from Leginon with the full path (.mrc)")
         parser.add_option("--save_bin", action="store_true",dest="save_bin",default=False,
                     help="Save binned image for quick inspection")
         parser.add_option("--save_norm", action="store_true",dest="save_norm",default=False,
-                    help="Save normalized movie frames as .mrcs")
+                    help="Save normalized movie frames as norm.mrcs")
         parser.add_option("--bin",dest="bin",type="int",metavar="INT",default=1,
                     help="Binning factor to use during movie alignment, 1 or 2. (Default=1)")
 	parser.add_option("-d", action="store_true",dest="debug",default=False,
@@ -65,10 +65,10 @@ def normalize(params,unblurPath):
     	print cmd
     	subprocess.Popen(cmd,shell=True).wait()
 
-    mrcList = sorted(glob.glob('%s/*.frames.mrcs'%(params['dir'])))
+    mrcList = sorted(glob.glob('%s/*.mrcs'%(params['dir'])))
 
     if len(mrcList) == 0: 
-	print 'Error: No .frames.mrcs movies found in directory %s' %(params['dir'])
+	print 'Error: No .mrcs movies found in directory %s' %(params['dir'])
 	sys.exit()
 
     for mrcs in mrcList:
@@ -98,7 +98,7 @@ def normalize(params,unblurPath):
             continue
         
 	inmovie=mrcs
-	normmovie='%s.mrcs' %(mrcs[:-12])
+	normmovie='%s_norm.mrcs' %(mrcs[:-5])
 	norm='%s.mrc' %(mrcs[:-12])
 
 	if params['debug'] is True:
