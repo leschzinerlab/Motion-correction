@@ -99,7 +99,7 @@ def normalize(params,unblurPath):
         
 	inmovie=mrcs
 	normmovie='%s_norm.mrcs' %(mrcs[:-5])
-	norm='%s.mrc' %(mrcs[:-12])
+	norm='%s.mrc' %(mrcs[:-5])
 
 	if params['debug'] is True:
 		print 'Input movie: %s' %(inmovie)
