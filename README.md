@@ -51,13 +51,11 @@ This program takes movies with .frames.mrcs extensions and creates aligned movie
 
 Options:
   -h, --help       show this help message and exit
-  --dir=FILE       Directory containing direct detector movies (.frames.mrcs
-                   extension)
+  --dir=FILE       Directory containing direct detector movies (.mrcs extension)
   --gain_ref=FILE  Gain reference file from Leginon with the full path (.mrc)
   --save_bin       Save binned image for quick inspection
-  --save_norm      Save normalized movie frames as .mrcs
-  --bin=INT        Binning factor to use during movie alignment, 1 or 2.
-                   (Default=1)
+  --save_norm      Save normalized movie frames as _norm.mrcs
+  --bin=INT        Binning factor to use during movie alignment, 1 or 2. (Default=1)
   -d               debug</pre>
   
 Running notes: 
