@@ -39,7 +39,7 @@ Within this repository we are including a pre-compiled alignparts_lmbfgs.exe pro
 
 As the program is currently written, it will normalize and align UN-normalized movies that were collected using Leginon. This means that it expects the following inputs: 
 
-* Movies with the extension '.frames.mrcs'
+* Movies with the extension '.mrcs'
 * Gain reference '.mrc' file that has the same dimensions as the movies
 
 ### Running the program
@@ -60,7 +60,7 @@ Options:
   
 Running notes: 
 
-* To run this program, make sure that only the movies you want aligned are within a specified directory and have the '.frames.mrcs' extension.
+* To run this program, make sure that only the movies you want aligned are within a specified directory and have the '.mrcs' extension. NOTE: This program will run on ALL .mrcs files in the directory provided
 * Specify the absolute paths to the directory with movies and to the gain reference .mrc file
 
 Example command: 
@@ -73,7 +73,7 @@ The program will then align each movie using its GPU cores to produce files with
 
 For example, if you had the input micrograph: 
 
-<pre>/data/frames/leginon/15sep30a/rawdata/15sep30a_b1_1e_00009gr_00003sq_00007hl_00001en.frames.mrcs</pre>
+<pre>/data/frames/leginon/15sep30a/rawdata/15sep30a_b1_1e_00009gr_00003sq_00007hl_00001en.frames_norm.mrcs</pre>
 
 You would get: 
 
@@ -81,7 +81,7 @@ You would get:
 
 And, if you asked for normalized movie frames as an output with the <pre>--save_norm</pre> option,  you would also get: 
 
-<pre>/data/frames/leginon/15sep30a/rawdata/15sep30a_b1_1e_00009gr_00003sq_00007hl_00001en.mrcs</pre>
+<pre>/data/frames/leginon/15sep30a/rawdata/15sep30a_b1_1e_00009gr_00003sq_00007hl_00001en_norm.mrcs</pre>
 
 ## Per-particle alignment using runLMBFGS_relion.py
 
