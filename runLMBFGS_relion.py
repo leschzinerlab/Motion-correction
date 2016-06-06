@@ -280,11 +280,35 @@ def combineSTARfiles(basename,nprocs,outfile):
 		nproc=nproc+1
 
 #==============================
+def getEMANPath():
+        ### get the eman2 directory        
+        emanpath = subprocess.Popen("env | grep EMAN2DIR", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
+
+        if emanpath:
+                emanpath = emanpath.replace("EMAN2DIR=","")
+        if os.path.exists(emanpath):
+                return emanpath
+        print "EMAN2 was not found, make sure it is in your path"
+        sys.exit()
+
+#==============================
+def getGNUPLOTPath():
+        ### get the eman2 directory        
+        emanpath = subprocess.Popen("which gnuplot", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
+        if emanpath.split('/')[-1] == 'gnuplot':
+                return emanpath
+        print "GNUPLOT was not found, please install in order to visualize trajectories."
+        sys.exit()
+
+
+#==============================
 if __name__ == "__main__":
 
         params=setupParserOptions()
         checkConflicts(params)
-
+	getEMANPath()
+	getGNUPLOTPath()
+		
 	checkexec='%s/lm-bfgs_v3.0/' %('/'.join(sys.argv[0].split('/')[:-1]))
 
 	if params['exepath'] != 'lm-bfgs_v3.0/':	
