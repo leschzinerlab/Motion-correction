@@ -33,7 +33,7 @@ Within this repository we are including a pre-compiled alignparts_lmbfgs.exe pro
 
 [Rubinstein Lab Google Sites Scripts Repository] (https://sites.google.com/site/rubinsteingroup/direct-detector-align_lmbfgs)
 
-Minimmally, it will require: 
+Minimally, it will require: 
 * Compiled versions of lm-bfgs from the Rubinstein lab
 * EMAN2
 * Gnuplot
@@ -118,6 +118,8 @@ Options:
   --trialrun            Flag to run lm-bfgs on a single movie to check
                         particle trajectories and to show vector field plot
                         (Default=False)
+  --overwrite           Flag to over write any existing LM-BFGS runs
+                        (Default=False)
   --invert=INTEGER      Indicate whether to invert contrast (=1) or not (=0)
                         for output particle stack (Default=1)
   --nprocs=INTEGER      Number of CPUs for parallelization. (Default=1)
@@ -158,6 +160,7 @@ Options:
   * --trialrun - IMPORTANT: As described on [Rubinstein Lab Google site] (https://sites.google.com/site/rubinsteingroup/direct-detector-align_lmbfgs), they recommend check the smoothened trajectories to check if the program is work satisfactorily. To check this on a single micorgraph, include this flag. At the end of the particle trajectory alignment, you will be shown a plot of particle trajectories.
   
  ___Optional inputs:___
+  * --overwrite - Ignores previous LM-BFGS run output files and removes them, allowing users to bypass the normal checks and error messages that would prevent the user from overwriting existing data.
   * --nprocs - Specify number of processors for parallelizing the particle trajectory alignment. Only works on a single machine, not a cluster (at the moment).
   * --execpath - Input absolute path to compiled program 'alignparts_lmbfgs.exe'. By default, it will look in the folder provided by this Github repo: Motion-correction/lm-bfgs_v3.0/. 
   * --movieName - Additional name for movies. This is NOT the movie file extension, just additional text that differentiates the movie (if at all) from the aligned micrograph.
