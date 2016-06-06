@@ -33,6 +33,11 @@ Within this repository we are including a pre-compiled alignparts_lmbfgs.exe pro
 
 [Rubinstein Lab Google Sites Scripts Repository] (https://sites.google.com/site/rubinsteingroup/direct-detector-align_lmbfgs)
 
+Minimmally, it will require: 
+* Compiled versions of lm-bfgs from the Rubinstein lab
+* EMAN2
+* Gnuplot
+* 
 ## Whole frame alignment using runMotionCorrection.py
 
 ### Inputs
