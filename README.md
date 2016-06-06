@@ -37,7 +37,7 @@ Minimmally, it will require:
 * Compiled versions of lm-bfgs from the Rubinstein lab
 * EMAN2
 * Gnuplot
-* 
+ 
 ## Whole frame alignment using runMotionCorrection.py
 
 ### Inputs
