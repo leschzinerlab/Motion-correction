@@ -23,6 +23,8 @@ def setupParserOptions():
                 help="Radius of particles in pixels")
 	parser.add_option("--trialrun",action='store_true',dest="trialrun",default=False,
                 help="Flag to run lm-bfgs on a single movie to check particle trajectories and to show vector field plot (Default=False)")
+	parser.add_option("--overwrite",action='store_true',dest="overwrite",default=False,
+                help="Flag to over write any existing LM-BFGS runs (Default=False)")
 	parser.add_option("--invert",dest="invertcontrast",default=1,type="int",metavar="INTEGER",
                 help="Indicate whether to invert contrast (=1) or not (=0) for output particle stack (Default=1)")
 	parser.add_option("--nprocs",dest="nprocs",type="int",metavar="INTEGER",default=1,
@@ -79,8 +81,11 @@ def checkConflicts(params):
                 sys.exit()
 
 	if os.path.exists('%s_lmbfgs.star' %(params['starfile'][:-5])):
-		print "\nError: Output starfile %s_lmbfgs.star already exists. Exiting\n" %(params['starfile'][:-5])
-		sys.exit()
+		if params['overwrite'] is False:
+			print "\nError: Output starfile %s_lmbfgs.star already exists. Exiting\n" %(params['starfile'][:-5])
+			sys.exit()
+	        if params['overwrite'] is True:
+			os.remove('%s_lmbfgs.star' %(params['starfile'][:-5]))
 
 	if not os.path.exists('Micrographs/'):
 		print "\nError: Could not find folder containing movies and micrographs 'Micrographs/'. Exiting\n"
@@ -91,16 +96,24 @@ def checkConflicts(params):
                 sys.exit()
 
 	if os.path.exists('align_lmbfgs.bash'):
-		print "\nError: script align_lmbfgs.bash already exists. Exiting."
-		sys.exit()
-
+		if params['overwrite'] is False:
+                        print "\nError: script align_lmbfgs.bash already exists. Exiting."
+			sys.exit()
+                if params['overwrite'] is True:
+			os.remove('align_lmbfgs.bash')
 	if os.path.exists('coord.txt'):
-		print "\nError: coordinate text file coord.txt already exists. Exiting."
-		sys.exit()
-
+		if params['overwrite'] is False:
+                        print "\nError: coordinate text file coord.txt already exists. Exiting."
+			sys.exit()
+                if params['overwrite'] is True:
+			os.remove('coord.txt')
+	
 	if os.path.exists('movie.txt'):
-		print "\nErorr: movie text file movie.txt already exists. Exiting."
-		sys.exit()
+		if params['overwrite'] is False:
+                        print "\nErorr: movie text file movie.txt already exists. Exiting."
+			sys.exit()
+                if params['overwrite'] is True:
+			os.remove('movie.txt')
 
 #==============================
 def getPath(pathcheck,executable):
@@ -109,7 +122,7 @@ def getPath(pathcheck,executable):
 		return '%s/%s'%(pathcheck,executable)
 
 #==============================
-def checkExists(starfile,debug):
+def checkExists(starfile,debug,force):
 
 	#get relion indices for microraph and particles
 	microcol=int(getRelionColumnIndex(starfile,'_rlnMicrographName'))-1
@@ -132,17 +145,28 @@ def checkExists(starfile,debug):
 			print part
 
 		if os.path.exists('%s.coord' %(micro[:-4])):
-			print '\nError: LM-BFGS file %s.coord already exists.' %(micro[:-4])
-			flag=1
+			if force is False:
+				print '\nError: LM-BFGS file %s.coord already exists.' %(micro[:-4])
+				flag=1
+			if force is True:
+				os.remove('%s.coord' %(micro[:-4]))
+				flag=0
 
 		if os.path.exists('%s_lmbfgs.mrcs' %(part.split('@')[-1][:-(5+basename+1)])):
-			print '\nError: LM-BFGS output particles already exist: %s_lmbfgs.mrcs' %(part.split('@')[-1][:-5])
-			flag=1
+			if force is False:
+				print '\nError: LM-BFGS output particles already exist: %s_lmbfgs.mrcs' %(part.split('@')[-1][:-5])
+				flag=1
+			if force is True:
+				os.remove('%s_lmbfgs.mrcs' %(part.split('@')[-1][:-(5+basename+1)]))
+				flag=0
 
 		if os.path.exists('%s_lmbfgs.vec' %(part.split('@')[-1][:-(5+basename+1)])):
-                        print '\nError: LM-BFGS output particle vector already exists: %s_lmbfgs.vec' %(part.split('@')[-1][:-5])
-                        flag=1
-		
+			if force is False:
+	                        print '\nError: LM-BFGS output particle vector already exists: %s_lmbfgs.vec' %(part.split('@')[-1][:-5])
+	                        flag=1
+			if force is True:
+				os.remove('%s_lmbfgs.vec' %(part.split('@')[-1][:-(5+basename+1)]))
+				flag=0	
 		return flag
 #===============================
 def getRelionColumnIndex(star,rlnvariable):
@@ -328,7 +352,7 @@ if __name__ == "__main__":
 		print lmbstar
 
 	#Check if any outputs exist in the Micrographs and Particles/Micrographs folders:
-	checkFlag=checkExists(params['starfile'],params['debug'])
+	checkFlag=checkExists(params['starfile'],params['debug'],params['overwrite'])
 	if checkFlag ==1:
 		print '\nError: one or more LM-BFGS files already exist. Please remove these files, and resubmit.\n'
 		sys.exit()
