@@ -377,7 +377,10 @@ if __name__ == "__main__":
 		print maxframe
 	
 	#Get boxsize of particles
-	testMic=linecache.getline(params['starfile'],20).split()[3].split('@')[-1]
+	try:
+    		testMic=linecache.getline(params['starfile'],20).split()[3].split('@')[-1]
+	except IndexError:
+    		testMic=linecache.getline(params['starfile'],40).split()[3].split('@')[-1]
 	if params['boxsize']<0:
 		boxsize=subprocess.Popen("e2iminfo.py %s" %(testMic), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\t')[-1].split('\n')[0].split('x')[0] 
 

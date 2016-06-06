@@ -11,7 +11,6 @@ from os import system
 import linecache
 import time
 
-#This script runs unblur on a large number of movies in .mrc format
 #=========================
 def setupParserOptions():
         parser = optparse.OptionParser()
@@ -31,7 +30,7 @@ def setupParserOptions():
 
         if len(args) > 0:
                 parser.error("Unknown commandline options: " +str(args))
-        if len(sys.argv) <= 4:
+        if len(sys.argv) <= 3:
                 parser.print_help()
                 sys.exit()
         params={}
