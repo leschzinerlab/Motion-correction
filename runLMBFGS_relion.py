@@ -137,12 +137,21 @@ def checkExists(starfile,debug,force):
 			continue
 
 		micro=line.split()[microcol]
-		part=line.split()[particlecol]
+		part=line.split()[particlecol].split('@')[-1]
 
 		if debug is True:
-			print line
-			print micro	
-			print part
+			print 'Debug: Check exists routine\n' 
+			print 'Starfile list=%s\n' %(line)
+			print 'Micrograph=%s\n' %(micro)
+			print 'Stack=%s\n' %(part)
+
+		if not os.path.exists(micro):
+			print 'Error: Could not find micrograph %s for starfile line %s.' %(micro,line)
+			flag=1
+
+		if not os.path.exists(part):
+                        print 'Error: Could not find particle stack %s for starfile line %s.' %(part,line)
+                        flag=1
 
 		if os.path.exists('%s.coord' %(micro[:-4])):
 			if force is False:
@@ -150,24 +159,21 @@ def checkExists(starfile,debug,force):
 				flag=1
 			if force is True:
 				os.remove('%s.coord' %(micro[:-4]))
-				flag=0
 
-		if os.path.exists('%s_lmbfgs.mrcs' %(part.split('@')[-1][:-(5+basename+1)])):
+		if os.path.exists('%s_lmbfgs.mrcs' %(part[:-5])):
 			if force is False:
-				print '\nError: LM-BFGS output particles already exist: %s_lmbfgs.mrcs' %(part.split('@')[-1][:-5])
+				print '\nError: LM-BFGS output particles already exist: %s_lmbfgs.mrcs' %(part[:-5])
 				flag=1
 			if force is True:
-				os.remove('%s_lmbfgs.mrcs' %(part.split('@')[-1][:-(5+basename+1)]))
-				flag=0
+				os.remove('%s_lmbfgs.mrcs' %(part[:-5]))
 
-		if os.path.exists('%s_lmbfgs.vec' %(part.split('@')[-1][:-(5+basename+1)])):
+		if os.path.exists('%s_lmbfgs.vec' %(part[:-5])):
 			if force is False:
-	                        print '\nError: LM-BFGS output particle vector already exists: %s_lmbfgs.vec' %(part.split('@')[-1][:-5])
+	                        print '\nError: LM-BFGS output particle vector already exists: %s_lmbfgs.vec' %(part[:-5])
 	                        flag=1
 			if force is True:
-				os.remove('%s_lmbfgs.vec' %(part.split('@')[-1][:-(5+basename+1)]))
-				flag=0	
-		return flag
+				os.remove('%s_lmbfgs.vec' %(part[:-5]))
+	return flag
 #===============================
 def getRelionColumnIndex(star,rlnvariable):
 
@@ -348,33 +354,33 @@ if __name__ == "__main__":
 		sys.exit()
 
 	if params['debug'] is True:
-		print lmbfgs
-		print lmbstar
+		print 'Executable path for alignparts_lmbfgs.exe: %s' %(lmbfgs)
+		print 'Executable path for alignparts_starfilehandler.exe: %s\n' %(lmbstar)
 
 	#Check if any outputs exist in the Micrographs and Particles/Micrographs folders:
 	checkFlag=checkExists(params['starfile'],params['debug'],params['overwrite'])
 	if checkFlag ==1:
-		print '\nError: one or more LM-BFGS files already exist. Please remove these files, and resubmit.\n'
+		print '\nError detected. Please remedy the problem and resubmit. Exiting.\n'
 		sys.exit()
 
 	#Get dimensions of movies
 	if params['debug'] is True:
-		print 'Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2'])	
-		print glob.glob('Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2']))[0] 
+		print '\n List of micrographs: Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2'])	
+		print '\n Single micrograph %s' %(glob.glob('Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2']))[0])
 	
 	if params['moviedimx'] <0:
 		iminfo=subprocess.Popen("e2iminfo.py %s" %(glob.glob('Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2']))[0]), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\t')[-1].split('\n')[0].split('x')
 		if params['debug'] is True:
-			print iminfo	
+			print 'Debug: e2iminfo.py ---> %s' %iminfo	
 	if params['moviedimy'] <0:
                 iminfo=subprocess.Popen("e2iminfo.py %s" %(glob.glob('Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2']))[0]), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\t')[-1].split('\n')[0].split('x')
                 if params['debug'] is True:
-                        print iminfo
+			print 'Debug: e2iminfo.py ---> %s' %iminfo
 
 	if params['maxframes'] <0:
                 iminfo=subprocess.Popen("e2iminfo.py %s" %(glob.glob('Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2']))[0]), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\t')[-1].split('\n')[0].split('x')
                 if params['debug'] is True:
-                        print iminfo
+                        print 'Debug: e2iminfo.py ---> %s' %iminfo
 
 	if params['moviedimx'] < 0:
 		movieDIMX=iminfo[0]
@@ -396,9 +402,9 @@ if __name__ == "__main__":
 		maxframe=params['maxframes']
 
 	if params['debug'] is True:
-		print movieDIMX
-		print movieDIMY
-		print maxframe
+		print '\nDimx = %id' %(int(movieDIMX))
+		print 'Dimy = %i' %(int(movieDIMY))
+		print 'Max frames =%i' %(int(maxframe))
 	
 	#Get boxsize of particles
 	try:
@@ -411,7 +417,7 @@ if __name__ == "__main__":
 	if params['boxsize']>0:
 		boxsize=params['boxsize']
 	if params['debug'] is True:
-		print boxsize
+		print 'Boxsize=%i' %(int(boxsize))
 	
 	#First, last frames 
 
@@ -431,7 +437,7 @@ if __name__ == "__main__":
 	#Get random particle & grab voltage
 	kev=int(float(linecache.getline(params['starfile'],100).split()[voltage]))
 	if params['debug'] is True:
-		print kev
+		print 'kev=%i' %(kev)
 	
 	#Get random particle and get pixle size and mag
 	detectorsize=linecache.getline(params['starfile'],100).split()[pixel]
@@ -439,9 +445,9 @@ if __name__ == "__main__":
 	pixelSize=float(detectorsize)/float(magnification)*10000
 
 	if params['debug'] is True:
-		print detectorsize
-		print magnification
-		print pixelSize
+		print 'detectorsize=%s' %(detectorsize)
+		print 'mag=%s' %(magnification)
+		print 'Calculated pixel size = %f\n' %(pixelSize)
 
 	if params['pixelsize']:
 		pixelSize=params['pixelsize']
