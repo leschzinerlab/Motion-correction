@@ -137,6 +137,14 @@ Options:
                         dose. (Default=False)
   --dose=FLOAT          IF EXPOSURE WEIGHTING: Dose per frame in electrons per
                         Angstroms-squared.
+  --moviedimx=INT       Optional: Input movie dimensions - X axis. (By default
+                        this is read from input file)
+  --moviedimy=INT       Optional: Input movie dimensions - Y axis. (By default
+                        this is read from input file)
+  --maxframes=INT       Optional: Input maximum number of movie frames (By
+                        default this is read from input file)
+  --boxsize=INT         Optional: Input box size for particles(By default this
+                        is read from input file)
   -d                    debug</pre>
   
  ___Required inputs:___  
@@ -156,7 +164,11 @@ Options:
   * --apix - override pixel size calculated from STAR file
   * --exposureweight - flag to weight each frame of the movie according to the dose-dependent decay of resolution information 
   * --dose - if exposure weighting, include the dose on each frame of the movie in electrons per Angstroms-squared per frame.
- 
+  * --moviedimx - Movie dimensions on the X-axis. Allows user to override automatic reading of dimensions with e2iminfo.py within routine.
+  * --moviedimy - Movie dimensions on the Y-axis. Allows user to override automatic reading of dimensions with e2iminfo.py within routine. 
+  * --maxframes - Maximum number of frames in movies. Allows user to override automatic reading of dimensions with e2iminfo.py within routine.
+  * --boxsize - Box size for particles. Allows user to override automatic reading of dimensions with e2iminfo.py within routine.
+
 Example command: 
 
 <pre>Motion-correction/runLMBFGS_relion.py --star=particles.star --radius=50 --nprocs=4</pre>

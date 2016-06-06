@@ -47,6 +47,14 @@ def setupParserOptions():
                 help="Optional: Flag to exposureweight particles based upon dose. (Default=False)")
 	parser.add_option("--dose",dest="dose",type='float',metavar='FLOAT',default=1,
                 help="IF EXPOSURE WEIGHTING: Dose per frame in electrons per Angstroms-squared.")
+	parser.add_option("--moviedimx",dest="moviedimx",type="int",metavar="INT",default=-1,
+                help="Optional: Input movie dimensions - X axis. (By default this is read from input file)")
+	parser.add_option("--moviedimy",dest="moviedimy",type="int",metavar="INT",default=-1,
+                help="Optional: Input movie dimensions - Y axis. (By default this is read from input file)")
+	parser.add_option("--maxframes",dest="maxframes",type="int",metavar="INT",default=-1,
+                help="Optional: Input maximum number of movie frames (By default this is read from input file)")
+	parser.add_option("--boxsize",dest="boxsize",type="int",metavar="INT",default=-1,
+                help="Optional: Input box size for particles(By default this is read from input file)")
 	parser.add_option("-d", action="store_true",dest="debug",default=False,
                 help="debug")
         options,args = parser.parse_args()
@@ -305,20 +313,52 @@ if __name__ == "__main__":
 	if params['debug'] is True:
 		print 'Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2'])	
 		print glob.glob('Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2']))[0] 
+	
+	if params['moviedimx'] <0:
+		iminfo=subprocess.Popen("e2iminfo.py %s" %(glob.glob('Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2']))[0]), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\t')[-1].split('\n')[0].split('x')
+		if params['debug'] is True:
+			print iminfo	
+	if params['moviedimy'] <0:
+                iminfo=subprocess.Popen("e2iminfo.py %s" %(glob.glob('Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2']))[0]), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\t')[-1].split('\n')[0].split('x')
+                if params['debug'] is True:
+                        print iminfo
 
-	movieDIMX=subprocess.Popen("iminfo %s" %(glob.glob('Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2']))[0]), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\n')[3].split('\t')[0].split('x')[0].split()[-1]
-	movieDIMY=subprocess.Popen("iminfo %s" %(glob.glob('Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2']))[0]), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\n')[3].split('\t')[0].split('x')[1].split()[-1]
-	maxframe=subprocess.Popen("iminfo %s" %(glob.glob('Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2']))[0]), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\n')[3].split('\t')[0].split('x')[2].split()[-1]
+	if params['maxframes'] <0:
+                iminfo=subprocess.Popen("e2iminfo.py %s" %(glob.glob('Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2']))[0]), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\t')[-1].split('\n')[0].split('x')
+                if params['debug'] is True:
+                        print iminfo
+
+	if params['moviedimx'] < 0:
+		movieDIMX=iminfo[0]
+	if params['moviedimx'] > 0:
+		movieDIMX=params['moviedimx']
+
+	if params['moviedimy'] < 0:
+                movieDIMY=iminfo[1]
+        if params['moviedimy'] > 0:
+                movieDIMY=params['moviedimy']
+
+	if params['maxframes'] <0:	
+		if len(iminfo) == 2:
+			maxframe=subprocess.Popen("e2iminfo.py %s" %(glob.glob('Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2']))[0]), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\n')[1].split()[0]
+
+		if len(iminfo) ==3:
+			maxframe=iminfo[2]
+	if params['maxframes'] >0:
+		maxframe=params['maxframes']
 
 	if params['debug'] is True:
 		print movieDIMX
 		print movieDIMY
 		print maxframe
-
+	
 	#Get boxsize of particles
 	testMic=linecache.getline(params['starfile'],20).split()[3].split('@')[-1]
-	boxsize=subprocess.Popen("iminfo %s" %(testMic), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\n')[3].split('\t')[0].split('x')[-3].split()[-1]
+	if params['boxsize']<0:
+		boxsize=subprocess.Popen("e2iminfo.py %s" %(testMic), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\t')[-1].split('\n')[0].split('x')[0] 
 
+	if params['boxsize']>0:
+		boxsize=params['boxsize']
 	if params['debug'] is True:
 		print boxsize
 	
