@@ -173,7 +173,7 @@ def checkExists(starfile,debug,force):
 	                        flag=1
 			if force is True:
 				os.remove('%s_lmbfgs.vec' %(part[:-5]))
-	return flag
+	return flag,micro,part
 #===============================
 def getRelionColumnIndex(star,rlnvariable):
 
@@ -358,29 +358,24 @@ if __name__ == "__main__":
 		print 'Executable path for alignparts_starfilehandler.exe: %s\n' %(lmbstar)
 
 	#Check if any outputs exist in the Micrographs and Particles/Micrographs folders:
-	checkFlag=checkExists(params['starfile'],params['debug'],params['overwrite'])
+	checkFlag,micrograph,teststack=checkExists(params['starfile'],params['debug'],params['overwrite'])
 	if checkFlag ==1:
 		print '\nError detected. Please remedy the problem and resubmit. Exiting.\n'
 		sys.exit()
 
 	#Get dimensions of movies
-	if params['debug'] is True:
-		print '\n List of micrographs: Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2'])	
-		print '\n Single micrograph %s' %(glob.glob('Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2']))[0])
-	
 	if params['moviedimx'] <0:
-		iminfo=subprocess.Popen("e2iminfo.py %s" %(glob.glob('Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2']))[0]), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\t')[-1].split('\n')[0].split('x')
+		iminfo=subprocess.Popen("e2iminfo.py %s" %(micrograph), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\t')[-1].split('\n')[0].split('x')
 		if params['debug'] is True:
 			print 'Debug: e2iminfo.py ---> %s' %iminfo	
 	if params['moviedimy'] <0:
-                iminfo=subprocess.Popen("e2iminfo.py %s" %(glob.glob('Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2']))[0]), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\t')[-1].split('\n')[0].split('x')
+                iminfo=subprocess.Popen("e2iminfo.py %s" %(micrograph), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\t')[-1].split('\n')[0].split('x')
                 if params['debug'] is True:
 			print 'Debug: e2iminfo.py ---> %s' %iminfo
-
 	if params['maxframes'] <0:
-                iminfo=subprocess.Popen("e2iminfo.py %s" %(glob.glob('Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2']))[0]), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\t')[-1].split('\n')[0].split('x')
+                maxframe=subprocess.Popen("e2iminfo.py %s.%s" %(micrograph[:-4],params['movieEXT2']), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split()[1]
                 if params['debug'] is True:
-                        print 'Debug: e2iminfo.py ---> %s' %iminfo
+                        print 'Debug: e2iminfo.py ---> %s' %maxframe
 
 	if params['moviedimx'] < 0:
 		movieDIMX=iminfo[0]
@@ -392,27 +387,17 @@ if __name__ == "__main__":
         if params['moviedimy'] > 0:
                 movieDIMY=params['moviedimy']
 
-	if params['maxframes'] <0:	
-		if len(iminfo) == 2:
-			maxframe=subprocess.Popen("e2iminfo.py %s" %(glob.glob('Micrographs/*%s.%s'%(params['movieEXT1'],params['movieEXT2']))[0]), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\n')[1].split()[0]
-
-		if len(iminfo) ==3:
-			maxframe=iminfo[2]
 	if params['maxframes'] >0:
 		maxframe=params['maxframes']
 
 	if params['debug'] is True:
-		print '\nDimx = %id' %(int(movieDIMX))
+		print '\nDimx = %i' %(int(movieDIMX))
 		print 'Dimy = %i' %(int(movieDIMY))
-		print 'Max frames =%i' %(int(maxframe))
+		print 'Max frames =%i' %(int(float(maxframe)))
 	
 	#Get boxsize of particles
-	try:
-    		testMic=linecache.getline(params['starfile'],20).split()[3].split('@')[-1]
-	except IndexError:
-    		testMic=linecache.getline(params['starfile'],40).split()[3].split('@')[-1]
 	if params['boxsize']<0:
-		boxsize=subprocess.Popen("e2iminfo.py %s" %(testMic), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\t')[-1].split('\n')[0].split('x')[0] 
+		boxsize=subprocess.Popen("e2iminfo.py %s" %(teststack), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split('\t')[-1].split('\n')[0].split('x')[0] 
 
 	if params['boxsize']>0:
 		boxsize=params['boxsize']
