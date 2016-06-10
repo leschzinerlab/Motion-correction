@@ -122,12 +122,10 @@ Options:
                         (Default=False)
   --invert=INTEGER      Indicate whether to invert contrast (=1) or not (=0)
                         for output particle stack (Default=1)
-  --nprocs=INTEGER      Number of CPUs for parallelization. (Default=1)
   --exepath=PATH        Optional: Path to executable files. (Default=Motion-
                         correction/lm-bfgs_v3.0/)
   --movieNAME=Movie extension
-                        Optional: Additional name for movies.
-                        (Default=.frames)
+                        Optional: Additional name for movies. (Default=_movie)
   --movieEXT=Movie extension
                         Optional: Movie extension. (Default=mrcs)
   --firstFrame=INTEGER  Optional: First frame of movies to use for alignment.
@@ -136,6 +134,8 @@ Options:
                         (Default=Last Frame)
   --smoothening=STRING  Optional: Amount of smoothening forced onto
                         trajectories of particles. (Default=1.0d4)
+  --localsigma=INTEGER  Optional: Local sigma factor to increase correlation
+                        between trajectories. (Default=500)
   --exaggerate=INTEGER  Optional: Factor by which particle trajectories should
                         be exaggerated in vector file. (Default=5)
   --apix=FLOAT          Optional: Provide pixel size instead of calculating
@@ -168,6 +168,7 @@ Options:
   * --firstFrame - First frame to use in the movie alignment
   * --lastFrame - last frame to use in alignment. By default this will be the last frame in the movie.
   * --smoothening - parameter for smoothening function. NEEDS TO BE CHANGED IF YOU WANT TO ALTER OUTPUT PARTICLE TRAJECTORIES. 
+  * --localsigma - parameter for enforcing local correlations for trajectories. NEEDS TO BE CHANGED IF YOU WANT TO ALTER OUTPUT PARTICLE TRAJECTORIES.
   * --exaggerate - can be changed to alter output trajectories. 
   * --apix - override pixel size calculated from STAR file
   * --exposureweight - flag to weight each frame of the movie according to the dose-dependent decay of resolution information 
