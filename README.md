@@ -161,7 +161,6 @@ Options:
   
  ___Optional inputs:___
   * --overwrite - Ignores previous LM-BFGS run output files and removes them, allowing users to bypass the normal checks and error messages that would prevent the user from overwriting existing data.
-  * --nprocs - Specify number of processors for parallelizing the particle trajectory alignment. Only works on a single machine, not a cluster (at the moment).
   * --execpath - Input absolute path to compiled program 'alignparts_lmbfgs.exe'. By default, it will look in the folder provided by this Github repo: Motion-correction/lm-bfgs_v3.0/. 
   * --movieName - Additional name for movies. This is NOT the movie file extension, just additional text that differentiates the movie (if at all) from the aligned micrograph.
   * --movieEXT - Movie file extension (e.g. .mrcs)
@@ -180,7 +179,7 @@ Options:
 
 Example command: 
 
-<pre>Motion-correction/runLMBFGS_relion.py --star=particles.star --radius=50 --nprocs=4</pre>
+<pre>Motion-correction/runLMBFGS_relion.py --star=particles.star --radius=50</pre>
 
 ### Outputs
 
