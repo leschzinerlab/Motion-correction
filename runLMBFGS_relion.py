@@ -27,8 +27,8 @@ def setupParserOptions():
                 help="Flag to over write any existing LM-BFGS runs (Default=False)")
 	parser.add_option("--invert",dest="invertcontrast",default=1,type="int",metavar="INTEGER",
                 help="Indicate whether to invert contrast (=1) or not (=0) for output particle stack (Default=1)")
-	parser.add_option("--nprocs",dest="nprocs",type="int",metavar="INTEGER",default=1,
-                help="Number of CPUs for parallelization. (Default=1)")
+#	parser.add_option("--nprocs",dest="nprocs",type="int",metavar="INTEGER",default=1,
+#                help="Number of CPUs for parallelization. (Default=1)")
 	parser.add_option("--exepath",dest="exepath",type="string",metavar="PATH",default='lm-bfgs_v3.0/',
                 help="Optional: Path to executable files. (Default=Motion-correction/lm-bfgs_v3.0/)")
 	parser.add_option("--movieNAME",dest="movieEXT1",type="string",metavar="Movie extension",default='_movie',
@@ -344,6 +344,7 @@ def getGNUPLOTPath():
 if __name__ == "__main__":
 
         params=setupParserOptions()
+	params['nprocs']=1
         checkConflicts(params)
 	getEMANPath()
 	getGNUPLOTPath()
