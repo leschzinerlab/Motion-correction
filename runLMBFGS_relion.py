@@ -31,8 +31,8 @@ def setupParserOptions():
                 help="Number of CPUs for parallelization. (Default=1)")
 	parser.add_option("--exepath",dest="exepath",type="string",metavar="PATH",default='lm-bfgs_v3.0/',
                 help="Optional: Path to executable files. (Default=Motion-correction/lm-bfgs_v3.0/)")
-	parser.add_option("--movieNAME",dest="movieEXT1",type="string",metavar="Movie extension",default='.frames',
-                help="Optional: Additional name for movies. (Default=.frames)")
+	parser.add_option("--movieNAME",dest="movieEXT1",type="string",metavar="Movie extension",default='_movie',
+                help="Optional: Additional name for movies. (Default=_movie)")
 	parser.add_option("--movieEXT",dest="movieEXT2",type="string",metavar="Movie extension",default='mrcs',
                 help="Optional: Movie extension. (Default=mrcs)")
 	parser.add_option("--firstFrame",dest="firstframe",type="int",metavar="INTEGER",default=1,
@@ -41,6 +41,8 @@ def setupParserOptions():
                 help="Optional: Last frame of movies to use for alignment. (Default=Last Frame)")
         parser.add_option("--smoothening",dest="smooth",type="string",metavar="STRING",default='1.0d4',
                 help="Optional: Amount of smoothening forced onto trajectories of particles. (Default=1.0d4)")
+	parser.add_option("--localsigma",dest="sigma",type="int",metavar="INTEGER",default='500',
+                help="Optional: Local sigma factor to increase correlation between trajectories. (Default=500)")
 	parser.add_option("--exaggerate",dest="exaggerate",type="int",metavar="INTEGER",default='5',
                 help="Optional: Factor by which particle trajectories should be exaggerated in vector file. (Default=5)")
 	parser.add_option("--apix",dest="pixelsize",type="float",metavar="FLOAT",
@@ -122,7 +124,7 @@ def getPath(pathcheck,executable):
 		return '%s/%s'%(pathcheck,executable)
 
 #==============================
-def checkExists(starfile,debug,force):
+def checkExists(starfile,debug,force,movieEXT1,movieEXT2):
 
 	#get relion indices for microraph and particles
 	microcol=int(getRelionColumnIndex(starfile,'_rlnMicrographName'))-1
@@ -130,6 +132,7 @@ def checkExists(starfile,debug,force):
 	flag=0
 
 	basename=len(starfile.split('.')[0])
+	counter=1
 
 	for line in open(starfile,'r'):
 
@@ -139,11 +142,12 @@ def checkExists(starfile,debug,force):
 		micro=line.split()[microcol]
 		part=line.split()[particlecol].split('@')[-1]
 
-		if debug is True:
-			print 'Debug: Check exists routine\n' 
-			print 'Starfile list=%s\n' %(line)
-			print 'Micrograph=%s\n' %(micro)
-			print 'Stack=%s\n' %(part)
+		if counter ==1:
+			if debug is True:
+				print 'Debug: Check exists routine\n' 
+				print 'Starfile list=%s\n' %(line)
+				print 'Micrograph=%s\n' %(micro)
+				print 'Stack=%s\n' %(part)
 
 		if not os.path.exists(micro):
 			print 'Error: Could not find micrograph %s for starfile line %s.' %(micro,line)
@@ -152,6 +156,10 @@ def checkExists(starfile,debug,force):
 		if not os.path.exists(part):
                         print 'Error: Could not find particle stack %s for starfile line %s.' %(part,line)
                         flag=1
+
+		if not os.path.exists('%s%s.%s' %(micro[:-4],movieEXT1,movieEXT2)):
+			print 'Error: Could not movie %s%s.%s. ' %(micro[:-4],movieEXT1,movieEXT2)
+			flag=1
 
 		if os.path.exists('%s.coord' %(micro[:-4])):
 			if force is False:
@@ -173,6 +181,7 @@ def checkExists(starfile,debug,force):
 	                        flag=1
 			if force is True:
 				os.remove('%s_lmbfgs.vec' %(part[:-5]))
+		counter=counter+1
 	return flag,micro,part
 #===============================
 def getRelionColumnIndex(star,rlnvariable):
@@ -358,9 +367,9 @@ if __name__ == "__main__":
 		print 'Executable path for alignparts_starfilehandler.exe: %s\n' %(lmbstar)
 
 	#Check if any outputs exist in the Micrographs and Particles/Micrographs folders:
-	checkFlag,micrograph,teststack=checkExists(params['starfile'],params['debug'],params['overwrite'])
+	checkFlag,micrograph,teststack=checkExists(params['starfile'],params['debug'],params['overwrite'],params['movieEXT1'],params['movieEXT2'])
 	if checkFlag ==1:
-		print '\nError detected. Please remedy the problem and resubmit. Exiting.\n'
+		print '\nError(s) detected. Please remedy the problem and resubmit. Exiting.\n'
 		sys.exit()
 
 	#Get dimensions of movies
@@ -373,7 +382,7 @@ if __name__ == "__main__":
                 if params['debug'] is True:
 			print 'Debug: e2iminfo.py ---> %s' %iminfo
 	if params['maxframes'] <0:
-                maxframe=subprocess.Popen("e2iminfo.py %s.%s" %(micrograph[:-4],params['movieEXT2']), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split()[1]
+                maxframe=subprocess.Popen("e2iminfo.py %s%s.%s" %(micrograph[:-4],params['movieEXT1'],params['movieEXT2']), shell=True, stdout=subprocess.PIPE).stdout.read().strip().split()[1]
                 if params['debug'] is True:
                         print 'Debug: e2iminfo.py ---> %s' %maxframe
 
@@ -480,7 +489,7 @@ if __name__ == "__main__":
 		cmd+='exaggerate=%i                   # factor by which particle trajectories should be exaggerated in vector file\n' %(params['exaggerate'])
 		cmd+='invertoutput=%i                 # 1 inverts output from movie densities, 0 does not\n'%(params['invertcontrast'])
 		cmd+='localavg=1                     # 1 performs local averaging of trajectories, 0 turns off this feature\n'
-		cmd+='localavgsigma=500              # the standard deviation used to weight local averaging\n'
+		cmd+='localavgsigma=%i              # the standard deviation used to weight local averaging\n' %(params['sigma'])
 		cmd+='#********************************************************************\n'
 		cmd+='# Exposure weighting (optional)\n'
 		if params['exposureweight'] is True:
@@ -514,7 +523,10 @@ if __name__ == "__main__":
 		cmd+='$boxsize,$framex,$framey\n'
 		cmd+='$moviepath\n'
 		cmd+='$particlepath\n'
-		cmd+='$movieflag\n'
+		if len(params['movieEXT1'])>0:
+			cmd+='$movieflag\n'
+		if len(params['movieEXT1'])==0:
+                        cmd+='""\n'
 		cmd+='$movieext\n'
 		cmd+='$lmbfgsflag\n'
 		cmd+='$lmbfgsext\n'	
@@ -593,11 +605,11 @@ if __name__ == "__main__":
 			print '\nWriting post-script file of vector trajectories\n'
 			print '\nPress [Enter] to finish\n'
 
-			if os.path.exists("Particles/Micrographs/%s_vectorTrajectories.ps" %(particle[:-(7)])):
-				os.remove("Particles/Micrographs/%s_vectorTrajectories.ps" %(particle[:-(7)]))
+			if os.path.exists("Particles/Micrographs/%s_vectorTrajectories_%s.ps" %(particle[:-(7)],params['smooth'])):
+				os.remove("Particles/Micrographs/%s_vectorTrajectories_%s.ps" %(particle[:-(7)],params['smooth']))
 
 			vec='set term postscript\n'
-        		vec+='set output "Particles/Micrographs/%s_vectorTrajectories.ps"\n' %(particle[:-(7)])
+        		vec+='set output "Particles/Micrographs/%s_vectorTrajectories_%s.ps"\n' %(particle[:-(7)],params['smooth'])
 			vec+='set size square\n'
                 	vec+='set xrange [1:%i]\n' %(int(movieDIMX))
                 	vec+='set yrange [1:%i]\n' %(int(movieDIMY))
@@ -619,8 +631,9 @@ if __name__ == "__main__":
                		subprocess.Popen(cmd3,shell=True).wait()
 
 			if params['debug'] is False:
-				cmd='rm Micrographs/*.coord Particles/Micrographs/*.vec align_lmbfgs.bash movie.txt coord.txt %s_set*star' %(params['starfile'][:-5])
-                        	subprocess.Popen(cmd2,shell=True).wait()
+				os.remove('Particles/Micrographs/%s_lmbfgs.mrcs' %(particle[:-(7)]))
+				cmd='rm gnuplotvectorfield.script Micrographs/*.coord Particles/Micrographs/*.vec movie.txt coord.txt %s_lmbfgs.star' %(params['starfile'][:-5])
+                        	subprocess.Popen(cmd,shell=True).wait()
                         
 	if params['trialrun'] is False and params['nprocs'] >1:
 
@@ -658,7 +671,7 @@ if __name__ == "__main__":
 		cmd+='exaggerate=%i                   # factor by which particle trajectories should be exaggerated in vector file\n' %(params['exaggerate'])
 		cmd+='invertoutput=%i                 # 1 inverts output from movie densities, 0 does not\n'%(params['invertcontrast'])
 		cmd+='localavg=1                     # 1 performs local averaging of trajectories, 0 turns off this feature\n'
-		cmd+='localavgsigma=500              # the standard deviation used to weight local averaging\n'
+		cmd+='localavgsigma=%i             # the standard deviation used to weight local averaging\n' %(params['sigma'])
 		cmd+='#********************************************************************\n'
 		cmd+='# Exposure weighting (optional)\n'
 		if params['exposureweight'] is True:
@@ -692,7 +705,10 @@ if __name__ == "__main__":
 		cmd+='$boxsize,$framex,$framey\n'
 		cmd+='$moviepath\n'
 		cmd+='$particlepath\n'
-		cmd+='$movieflag\n'
+                if len(params['movieEXT1'])>0:
+                        cmd+='$movieflag\n'
+                if len(params['movieEXT1'])==0:
+                        cmd+='""\n'
 		cmd+='$movieext\n'
 		cmd+='$lmbfgsflag\n'
 		cmd+='$lmbfgsext\n'	
@@ -737,7 +753,7 @@ if __name__ == "__main__":
 			if params['debug'] is True:
 				print cmd3
 			subprocess.Popen(cmd3,shell=True)
-			time.sleep(5)
+			time.sleep(10)
 			nproc=nproc+1
 		combineSTARfiles('%s_set' %(params['starfile'][:-5]),actualnprocs,'%s_lmbfgs.star' %(params['starfile'][:-5]))
 
