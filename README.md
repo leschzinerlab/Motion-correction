@@ -13,8 +13,9 @@ The scripts within this repository utilize both two different approachs for alig
 __Table of contents:__
 
 1. [Software dependencies] (https://github.com/leschzinerlab/Motion-correction#software-dependencies) 
-2. [Whole frame alignment using runMotionCorrection.py] (https://github.com/leschzinerlab/Motion-correction#whole-frame-alignment-using-runmotioncorrectionpy) 
-3. [Per-particle alignment using runLMBFGS_relion.py] (https://github.com/leschzinerlab/Motion-correction#per-particle-alignment-using-runlmbfgs_relionpy)
+2. [Whole frame alignment using runMotionCorrection.py] (https://github.com/leschzinerlab/Motion-correction#whole-frame-alignment-using-runmotioncorrectionpy)
+3. [Whole frame alignment and local alignment using runMotionCorr2.py] 
+4. [Per-particle alignment using runLMBFGS_relion.py] (https://github.com/leschzinerlab/Motion-correction#per-particle-alignment-using-runlmbfgs_relionpy)
 
 ## Software dependencies
 
@@ -87,6 +88,8 @@ You would get:
 And, if you asked for normalized movie frames as an output with the <pre>--save_norm</pre> option,  you would also get: 
 
 <pre>/data/frames/leginon/15sep30a/rawdata/15sep30a_b1_1e_00009gr_00003sq_00007hl_00001en_norm.mrcs</pre>
+
+## Whole frame and sub-frame alignment using MotionCorr2
 
 ## Per-particle alignment using runLMBFGS_relion.py
 
