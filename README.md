@@ -6,6 +6,10 @@ The scripts within this repository utilize both two different approachs for alig
   * runMotionCorrection.py
      * Which runs dosefgpu_driftcorr published by [Li et al. 2013]  (http://www.ncbi.nlm.nih.gov/pubmed/23644547) 
 
+* Whole movie frame alignment with sub-frame alignment:
+  * runMotionCorr2.py
+     * Which runs MotionCor2 published by [Zheng et al. 2015 (http://biorxiv.org/content/early/2016/07/04/061960)
+
 * Per-particle alignment: 
   * runLMBFGS_relion.py
      * Which runs alignparts_lmbfgs.exe published by [Rubinstein & Brubaker 2015] (http://arxiv.org/abs/1409.6789)
@@ -14,7 +18,7 @@ __Table of contents:__
 
 1. [Software dependencies] (https://github.com/leschzinerlab/Motion-correction#software-dependencies) 
 2. [Whole frame alignment using runMotionCorrection.py] (https://github.com/leschzinerlab/Motion-correction#whole-frame-alignment-using-runmotioncorrectionpy)
-3. [Whole frame alignment and local alignment using runMotionCorr2.py] 
+3. [Whole frame alignment with sub-frame alignment using runMotionCorr2.py] (https://github.com/leschzinerlab/Motion-correction#whole-frame-and-sub-frame-alignment-using-motioncorr2)
 4. [Per-particle alignment using runLMBFGS_relion.py] (https://github.com/leschzinerlab/Motion-correction#per-particle-alignment-using-runlmbfgs_relionpy)
 
 ## Software dependencies
@@ -27,6 +31,15 @@ CUDA-5.0 libraries must be installed on the GPU and be placed into your path bef
 
 <pre>PATH: /usr/local/cuda-5.0/bin
 LD_LIBRARY_PATH: /usr/local/cuda-5.0/lib64</pre>
+
+#### runMotionCorr2.py (MotionCorr2)
+
+You must have a GPU processor installed on your workstation with at least 4 GB of GPU memory (e.g. NVIDIA Tesla K10).
+
+CUDA-7.0 libraries must be installed on the GPU and be placed into your path before you can execute this program:
+
+<pre>PATH: /usr/local/cuda-7.0/bin
+LD_LIBRARY_PATH: /usr/local/cuda-7.0/lib64</pre>
 
 #### runLMBFGS_relion.py (alignparts_lmbfgs.exe)
 
@@ -90,6 +103,20 @@ And, if you asked for normalized movie frames as an output with the <pre>--save_
 <pre>/data/frames/leginon/15sep30a/rawdata/15sep30a_b1_1e_00009gr_00003sq_00007hl_00001en_norm.mrcs</pre>
 
 ## Whole frame and sub-frame alignment using MotionCorr2
+
+This program can align movies in addition to gain correcting raw movies before movie alignment. As described by the publication, MotionCor2 will also perform sub-movie frame alignment, as specified by the user. Defaults currently suggested by Zheng et al. are incorporated as defaults in this python wrapper.
+
+The wrapper script runMotionCorr2.py will provide users with the ability to run the program over all movies within a given directory, or within a given text file. The program will also skip any movies that have output files already created.
+
+### Inputs
+
+This program will run on two types of movies: 
+* Gain-corrected movies - These movies must have .mrcs extension
+* Raw movies - These movies must have .frames.mrc extension along with a gain reference image from Leginon.
+
+### Running the program
+
+<pre>
 
 ## Per-particle alignment using runLMBFGS_relion.py
 
