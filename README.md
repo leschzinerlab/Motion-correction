@@ -149,6 +149,10 @@ The program will decide if the input files are .mrcs or .frames.mrc based on whe
 
 **Dose weighting:** Users can dose weight their data by providing the dose rate, accelerating voltage, and pixel size. Otherwise the program will not weight the frames according to dose.
 
+### Outputs
+
+The program will output micrographs with a suffix -a.mrc or -a_weighted.mrc, depending on whether the user is dose weighting the images.
+
 ## Per-particle alignment using runLMBFGS_relion.py
 
 In order to use alignparts_lmbfgs.exe, there is a certain workflow that you will need to follow: 
