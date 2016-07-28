@@ -8,7 +8,7 @@ The scripts within this repository utilize both two different approachs for alig
 
 * Whole movie frame alignment with sub-frame alignment:
   * runMotionCorr2.py
-     * Which runs MotionCor2 published by [Zheng et al. 2015 (http://biorxiv.org/content/early/2016/07/04/061960)
+     * Which runs MotionCor2 published by [Zheng et al. 2015] (http://biorxiv.org/content/early/2016/07/04/061960)
 
 * Per-particle alignment: 
   * runLMBFGS_relion.py
@@ -116,7 +116,38 @@ This program will run on two types of movies:
 
 ### Running the program
 
-<pre>
+<pre>$ Motion-correction/runMotionCorr2.py 
+Usage: runMotionCorr2.py --dir=[folder with mrc frames] --gain_ref=[gain reference in mrc format with full path;input the _norm file from the leginon reference directory] --save_bin [save binned mic] 
+
+This program takes movies with .mrcs or .frames.mrc extensions and will create aligned movies with -a.mrc extension.
+ If dose weighting, output aligned movie will be named -a_weighted.mrc
+
+
+Options:
+  -h, --help        show this help message and exit
+  --microlist=FILE  Provide list of movies instead of directory location
+  --dir=FILE        Or provide directory containing direct detector movies
+                    (.mrcs extension unless using gain reference, then
+                    .frames.mrc)
+  --gain_ref=FILE   Gain reference file from Leginon with the full path (.mrc)
+  --throw=INT       Number of initial frames to discard from alignment.
+                    (Default=2)
+  --binning=INT     Scaling factor for output aligned movie (Default=2)
+  --patchsize=INT   Number of patches for local alignment (Default=5, which is
+                    a 5 x 5 tiling)
+  --dose=FLOAT      Optional: Input dose rate for dose weighting (electrons
+                    per Angstrom-squared
+  --kev=INT         Optional: If dose weighting, provide accelerating voltage
+                    in keV
+  --apix=FLOAT      Optional: If dose weighting, provide pixel size in
+                    Angstroms/pixel
+  -d                debug</pre>
+  
+  Users can provide either a directory or an input file. 
+  
+The program will decide if the input files are .mrcs or .frames.mrc based on whether the user input a gain reference. If it is a gain reference then it looks for .frames.mrc files, otherwise it will look for .mrcs.
+
+**Dose weighting:** Users can dose weight their data by providing the dose rate, accelerating voltage, and pixel size. Otherwise the program will not weight the frames according to dose.
 
 ## Per-particle alignment using runLMBFGS_relion.py
 
