@@ -36,29 +36,32 @@ bool initGPU(int GPUNum)
 	{
 		return false;
 	}
-	if(GPUNum>=ngpu)
-	{
+
+	cudaError_t status;
+	if (GPUNum < 0) {
+		// loop through all devices and use first available one.
+		for (GPUNum=0; GPUNum<ngpu; GPUNum++) {
+			status = cudaSetDevice(GPUNum);
+			if (status == cudaSuccess) break;
+		}
+	}
+	else if (GPUNum < ngpu) {
+		status = cudaSetDevice(GPUNum);
+	}
+	else {
 		printf("GPU ID %d is out of range(%d). Abort.\n",GPUNum,ngpu);
 		return false;
 	}
 
-	cudaDeviceProp prop;
-	if(cudaGetDeviceProperties(&prop, GPUNum) == cudaSuccess) 
-	{
-		printf("Use GPU: #%d %s\n",GPUNum,prop.name);
-		if(prop.kernelExecTimeoutEnabled)
-		{
-			printf("Warnning: This GPU is also used for display, may not stable.\n");
+	if (status == cudaSuccess) {
+		cudaDeviceProp prop;
+		if (cudaGetDeviceProperties(&prop, GPUNum) == cudaSuccess) {
+			if(prop.kernelExecTimeoutEnabled) {
+				printf("Warnning: This GPU is also used for display, may not stable.\n");
+			}
 		}
 	}
 
-
-	if(cudaSetDevice(GPUNum)!=cudaSuccess)
-	{
-		printf("Error: Failed to set CUDA Device #%d. Abort.\n",GPUNum);
-		return false;
-	}
-	
 	signal(SIGINT, siginthandler);
 
 	return true;

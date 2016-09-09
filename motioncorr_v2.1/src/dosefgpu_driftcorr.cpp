@@ -518,7 +518,7 @@ int main(int narg, char* argc[])
 	if(narg==1) 
 	{
 		printf("Dose Fractionation Tool:\n");
-		printf("Drift correction v2.1 (Nov 21, 2013)\n\n");
+		printf("Drift correction v2.1-as1 (Aug 29th, 2016)\n\n");
 		printf("    Input: InputStack.mrc [OPTION VALUE] ...\n");
 		printf("          *Note: If OPTION isn't specified, the default value will be used.\n\n");
 		printf("           OPTION     VALUE(Default)    Introduction  \n");
@@ -531,7 +531,7 @@ int main(int narg, char* argc[])
 		printf("           -ned       0                 Last frame (0-base) used in alignment. 0: Use maximum value.\n");
 		printf("           -nss       0                 First frame (0-base) used for final sum.\n");
 		printf("           -nes       0                 Last frame (0-base) used for final sum. 0: Use maximum value.\n");
-		printf("           -gpu       0                 GPU device ID.\n");
+		printf("           -gpu      -1                 GPU device ID (-1: search for first free GPU)\n");
 		printf("           -bft       150               BFactor in pix^2.\n");
 		printf("           -pbx       96                Box dimension for searching CC peak.\n");
 		printf("           -fod       2                 Number of frame offset for frame comparision.\n");
