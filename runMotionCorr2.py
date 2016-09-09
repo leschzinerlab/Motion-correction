@@ -14,7 +14,7 @@ import time
 #=========================
 def setupParserOptions():
         parser = optparse.OptionParser()
-        parser.set_usage("%prog --dir=<folder with mrc frames> --gain_ref=<gain reference in mrc format with full path;input the *_norm* file from the leginon reference directory> --save_bin <save binned mic> \n\nThis program takes movies with .mrcs or .frames.mrc extensions and will create aligned movies with -a.mrc extension.\n If dose weighting, output aligned movie will be named -a_weighted.mrc\n")
+        parser.set_usage("%prog --dir=<folder with mrc frames> --gain_ref=<gain reference in mrc format with full path;input the *_norm* file from the leginon reference directory> --save_bin <save binned mic> \n\nThis program takes movies with .mrcs or .frames.mrc extensions and will create aligned movies with -a.mrc extension.\n If dose weighting, output aligned movie will have the extension -a_DW.mrc\n")
         parser.add_option("--microlist",dest="inputlist",type="string",metavar="FILE",default='empty',
                     help="Provide list of movies instead of directory location")
 	parser.add_option("--dir",dest="dir",type="string",metavar="FILE",
@@ -64,19 +64,6 @@ def checkConflicts(params):
 #==============================
 def alignmovies(params,motionCor2Path):
 
-    if params['gain_ref'] != 'empty':
-	 if not os.path.exists('%s_rot-180.mrc'%(params['gain_ref'][:-4])):
-    	     cmd = 'newstack -rot -180 %s %s_rot-180.mrc' %(params['gain_ref'], params['gain_ref'][:-4])
-    	     if params['debug'] is True:
-	          print cmd
-    	     subprocess.Popen(cmd,shell=True).wait()
-
-    	 if not os.path.exists('%s_rot-180_flipy.mrc'%(params['gain_ref'][:-4])):
-    	     cmd = 'clip flipy %s_rot-180.mrc %s_rot-180_flipy.mrc' %(params['gain_ref'][:-4], params['gain_ref'][:-4])
-   	     if params['debug'] is True:
-  	          print cmd
-    	     subprocess.Popen(cmd,shell=True).wait()
-
     if params['gain_ref'] == 'empty':
           print '\nInput movies are assumed to be already gain corrected.\n'
 	  if params['debug'] is True:
@@ -101,13 +88,9 @@ def alignmovies(params,motionCor2Path):
 	inmovie=mrcs
 	if extension == 'mrcs':
 		outmicro='%s-a.mrc' %(mrcs[:-5])
-		if params['doserate'] > 0: 
-			outmicro='%s-a_weighted.mrc' %(mrcs[:-5])
 
 	if extension != 'mrcs':
 		outmicro='%s-a.mrc' %(mrcs[:-11])
-		if params['doserate'] > 0:
-                        outmicro='%s-a_weighted.mrc' %(mrcs[:-11])
 
 	if params['debug'] is True:
 		print 'Input movie: %s' %(inmovie)
@@ -124,11 +107,16 @@ def alignmovies(params,motionCor2Path):
 	if params['doserate'] == 0:
 		doseinfo=''
 
-	cmd = '%s -InMrc %s -OutMrc %s -Throw %i -Iter 10 -Patch %i %i -FtBin %i -FmDose %i %s' %(motionCor2Path,inmovie,outmicro,params['throw'],params['patch'],params['patch'],params['binning'],params['doserate'],doseinfo)
+	if params['gain_ref'] != 'empty':
+		gainref='-Gain %s' %(params['gain_ref'])
+	if params['gain_ref'] == 'empty':
+		gainref=''
+
+	cmd = '%s -InMrc %s -OutMrc %s -Throw %i -Iter 10 -Patch %i %i -FtBin %i -FmDose %i %s %s' %(motionCor2Path,inmovie,outmicro,params['throw'],params['patch'],params['patch'],params['binning'],params['doserate'],doseinfo,gainref)
  
-#	if params['debug'] is True:
-	print cmd
-        #subprocess.Popen(cmd,shell=True).wait()
+	if params['debug'] is True:
+		print cmd
+        subprocess.Popen(cmd,shell=True).wait()
 
 #=============================
 def getimodPath():
