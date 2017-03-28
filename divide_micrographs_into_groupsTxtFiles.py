@@ -3,15 +3,15 @@
 import glob 
 import os
 
-folder='/data/microscopes/frames/16aug11c/rawdata/'
+folder='/data/microscopes/frames/16jun03b/rawdata/'
 extension='.frames.mrc'
 outfilename='micrographs_'
 
 miclist=sorted(glob.glob('%s/*%s' %(folder,extension)))
 
-numgroups=4
-nummics=924
-micpergroup=232
+numgroups=3
+nummics=5539
+micpergroup=1847
 
 totmiccounter=1
 currentgroup=1

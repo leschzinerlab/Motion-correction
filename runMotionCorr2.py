@@ -27,6 +27,8 @@ def setupParserOptions():
                     help="Scaling factor for output aligned movie (Default=2) ")
 	parser.add_option("--patchsize",dest="patch",type="int",metavar="INT",default=5,
                     help="Number of patches for local alignment (Default=5, which is a 5 x 5 tiling)")
+	parser.add_option("--bfactor",dest="bfactor",type="int",metavar="INT",default=100,
+                    help="Bfactor to use during movie alignment. Must be positive value (Default=100)")
 	parser.add_option("--dose",dest="doserate",type="float",metavar="FLOAT",default=0,
                     help="Optional: Input dose rate for dose weighting (electrons per Angstrom-squared")
 	parser.add_option("--kev",dest="kev",type="int",metavar="INT",
@@ -51,6 +53,10 @@ def setupParserOptions():
 
 #=============================
 def checkConflicts(params):
+
+	if params['bfactor'] < 0: 
+		print 'Error: Bfactor must be positive. Exiting'
+		sys.exit()
 
         if params['inputlist'] == 'empty':
 		if not os.path.exists(params['dir']):
@@ -112,7 +118,10 @@ def alignmovies(params,motionCor2Path):
 	if params['gain_ref'] == 'empty':
 		gainref=''
 
-	cmd = '%s -InMrc %s -OutMrc %s -Throw %i -Iter 10 -Patch %i %i -FtBin %i -FmDose %i %s %s' %(motionCor2Path,inmovie,outmicro,params['throw'],params['patch'],params['patch'],params['binning'],params['doserate'],doseinfo,gainref)
+	if params['debug'] is True:
+		print params['doserate']
+
+	cmd = '%s -InMrc %s -OutMrc %s -Throw %i -Bft %i -Iter 10 -Patch %i %i -FtBin %i -FmDose %f %s %s' %(motionCor2Path,inmovie,outmicro,params['throw'],params['bfactor'],params['patch'],params['patch'],params['binning'],params['doserate'],doseinfo,gainref)
  
 	if params['debug'] is True:
 		print cmd
